@@ -35,7 +35,6 @@ require SRC_PATH . '/templates/header.php';
     for ($i = 0; $i < 7; $i++):
         $isActive = ($tempDate->format('Y-m-d') === $selectedDate->format('Y-m-d'));
         $isPastDay = ($tempDate < $today);
-        $dayIndex = ($i + 1) % 7; // 0=Dom, 1=Lun... per mappare le chiavi 'day_0', 'day_1'
 
         $baseClasses = "flex-shrink-0 w-16 py-3 rounded-lg text-center border transition-all duration-200";
 
@@ -79,7 +78,7 @@ require SRC_PATH . '/templates/header.php';
                 <?php endif; ?>
 
                 <span class="text-xs font-bold text-gray-300 uppercase tracking-wide">
-                    <?= htmlspecialchars(__($macchina['nome'])) ?>
+                    <?= htmlspecialchars($macchina['nome']) ?>
                 </span>
             </div>
 
@@ -103,8 +102,8 @@ require SRC_PATH . '/templates/header.php';
 
                 if ($isSlotPast) {
                     $slotClass = 'past';
-                    $statusText = __('status_free'); // Lascia "Libero" (o testo vuoto), il JS lo colorerà se occupato
-                    $onclick = ""; // Questo rimane vuoto per non cliccare
+                    $statusText = __('status_free');
+                    $onclick = "";
                 } elseif ($isManutenzione) {
                     $slotClass = 'past';
                     $statusText = 'X';

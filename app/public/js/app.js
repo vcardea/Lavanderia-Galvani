@@ -1,6 +1,6 @@
 /**
  * PUBLIC/JS/APP.JS
- * Versione Corretta e Definitiva
+ * Fully Internationalized
  */
 
 // Variabili globali
@@ -12,13 +12,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const currentDate =
     urlParams.get("date") || new Date().toISOString().split("T")[0];
 
-  // Caricamento iniziale
   fetchPrenotazioni(currentDate);
-
-  // Polling ogni 3 secondi per vedere aggiornamenti in tempo reale
   setInterval(() => fetchPrenotazioni(currentDate), 3000);
 
-  // Gestione chiusura modal cliccando fuori
   const modal = document.getElementById("bookingModal");
   if (modal) {
     modal.addEventListener("click", (e) => {
@@ -27,9 +23,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-/**
- * Gestisce il click sullo slot
- */
 async function prenotaSlot(element) {
   currentSlotElement = element;
 
@@ -37,14 +30,11 @@ async function prenotaSlot(element) {
   const date = element.dataset.date;
   const hour = element.dataset.hour;
 
-  // Recupero sicuro dell'orario
   const timeEl = element.querySelector(".time-label");
   const timeLabel = timeEl ? timeEl.innerText : hour + ":00";
 
-  // 1. SLOT PASSATO
   if (element.classList.contains("past")) return;
 
-  // 2. SLOT OCCUPATO (Rosso) o IN ATTESA (Giallo)
   if (
     element.classList.contains("taken") ||
     element.classList.contains("pending")
@@ -53,11 +43,10 @@ async function prenotaSlot(element) {
       ? t("status_pending")
       : `${t("status_taken")} (${element.dataset.username || "..."})`;
 
-    openModal(t("status_taken"), msg, "info");
+    openModal(t("msg_info"), msg, "info"); // USA t("msg_info")
     return;
   }
 
-  // 3. SLOT MIO (Azzurro) -> CANCELLAZIONE
   if (element.classList.contains("mine")) {
     currentLockId = element.dataset.idprenotazione;
     openModal(
@@ -69,8 +58,7 @@ async function prenotaSlot(element) {
     return;
   }
 
-  // 4. SLOT LIBERO -> NUOVA PRENOTAZIONE (Lock)
-  element.style.opacity = "0.5"; // Feedback visivo immediato
+  element.style.opacity = "0.5";
 
   try {
     const response = await fetch(BASE_URL + "/api/lock", {
@@ -79,19 +67,13 @@ async function prenotaSlot(element) {
       body: `idmacchina=${machineId}&data=${date}&ora=${hour}`,
     });
 
-    // Definiamo result QUI, dopo la chiamata
     const result = await response.json();
-
     element.style.opacity = "1";
 
     if (result.success) {
-      // Lock riuscito!
       currentLockId = result.lock_id;
-
-      // Visualizza stato "In corso" (Giallo)
       updateSlotVisual(element, "pending", t("status_pending"));
 
-      // Apre modale conferma
       openModal(
         t("modal_confirm_title"),
         `${t("modal_booking_msg")} <b>${timeLabel}</b>.<br>${t(
@@ -101,20 +83,16 @@ async function prenotaSlot(element) {
         confirmBooking
       );
     } else {
-      // Errore (es. Limite ore raggiunto, Già preso, etc.)
-      openModal("Info", result.message, "info");
+      openModal(t("msg_info"), result.message, "info");
       fetchPrenotazioni(date);
     }
   } catch (e) {
     console.error(e);
     element.style.opacity = "1";
-    openModal("Error", "Server Error", "info");
+    openModal(t("msg_error"), t("err_server"), "info");
   }
 }
 
-/**
- * Conferma finale della prenotazione
- */
 async function confirmBooking() {
   const btnConfirm = document.querySelector(".btn-confirm");
   if (btnConfirm) {
@@ -131,16 +109,12 @@ async function confirmBooking() {
     const result = await response.json();
 
     if (result.success) {
-      // SUCCESSO
       if (currentSlotElement) {
         updateSlotVisual(currentSlotElement, "mine", t("status_mine"));
         currentSlotElement.dataset.idprenotazione = currentLockId;
       }
-
       currentLockId = null;
       closeModalRaw();
-
-      // Refresh sicurezza
       if (currentSlotElement) {
         setTimeout(
           () => fetchPrenotazioni(currentSlotElement.dataset.date),
@@ -148,21 +122,17 @@ async function confirmBooking() {
         );
       }
     } else {
-      // ERRORE
       closeModalRaw();
-      openModal("Info", result.message, "info");
+      openModal(t("msg_info"), result.message, "info");
       if (currentSlotElement)
         fetchPrenotazioni(currentSlotElement.dataset.date);
     }
   } catch (e) {
     closeModalRaw();
-    openModal("Error", "Network Error", "info");
+    openModal(t("msg_error"), t("err_network"), "info");
   }
 }
 
-/**
- * Cancellazione Prenotazione
- */
 async function confirmCancellation() {
   try {
     const response = await fetch(BASE_URL + "/api/cancella", {
@@ -181,28 +151,24 @@ async function confirmCancellation() {
       fetchPrenotazioni(currentSlotElement.dataset.date);
     } else {
       closeModalRaw();
-      openModal("Error", result.message, "info");
+      openModal(t("msg_error"), result.message, "info");
     }
   } catch (e) {
     closeModalRaw();
-    openModal("Error", "Network Error", "info");
+    openModal(t("msg_error"), t("err_network"), "info");
   }
 }
-
-// --- GESTIONE MODAL ---
 
 function handleCloseModal() {
   const modal = document.getElementById("bookingModal");
   if (!modal.classList.contains("open")) return;
 
-  // Unlock se chiudo senza confermare
   if (currentLockId && !document.querySelector(".btn-confirm")?.disabled) {
     fetch(BASE_URL + "/api/unlock", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `lock_id=${currentLockId}`,
     });
-    // Reset visivo
     if (
       currentSlotElement &&
       currentSlotElement.classList.contains("pending")
@@ -226,7 +192,6 @@ function openModal(title, body, type, callback) {
   const actions = document.getElementById("modalActions");
   actions.innerHTML = "";
 
-  // Tasto Annulla
   const btnCancel = document.createElement("button");
   btnCancel.className =
     "flex-1 px-4 py-2 rounded bg-zinc-700 text-white font-medium hover:bg-zinc-600 transition-colors";
@@ -234,7 +199,6 @@ function openModal(title, body, type, callback) {
   btnCancel.onclick = handleCloseModal;
   actions.appendChild(btnCancel);
 
-  // Tasto Azione
   if (type !== "info" && callback) {
     const btnOk = document.createElement("button");
     const colorClass =
@@ -250,8 +214,6 @@ function openModal(title, body, type, callback) {
 
   document.getElementById("bookingModal").classList.add("open");
 }
-
-// --- UTILITIES GRIGLIA ---
 
 async function fetchPrenotazioni(date) {
   try {
@@ -272,11 +234,7 @@ async function fetchPrenotazioni(date) {
 
     const allSlots = document.querySelectorAll(".slot");
     allSlots.forEach((slotEl) => {
-      // if (slotEl.classList.contains("past")) return;
-      
       const p = dataMap[slotEl.id];
-
-      // Stato desiderato (con traduzioni)
       let targetClass = "free";
       let targetText = t("status_free");
 
@@ -294,7 +252,6 @@ async function fetchPrenotazioni(date) {
         }
       }
 
-      // Aggiorna DOM solo se diverso
       if (!slotEl.classList.contains(targetClass)) {
         slotEl.classList.remove("free", "taken", "mine", "pending");
         slotEl.classList.add(targetClass);
@@ -302,7 +259,6 @@ async function fetchPrenotazioni(date) {
       const span = slotEl.querySelector(".status-text");
       if (span && span.innerText !== targetText) span.innerText = targetText;
 
-      // Dataset
       const newId = p ? p.idprenotazione : "";
       const newName = p ? p.username : "";
 

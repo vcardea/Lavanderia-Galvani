@@ -45,4 +45,3 @@ CREATE TABLE
         -- Indice per velocizzare le query di ricerca conflitti
         INDEX idx_conflitti (data_prenotazione, ora_inizio, idmacchina)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
-
