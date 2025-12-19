@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Se la richiesta non è un file fisico o una cartella fisica
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Reindirizza tutto a index.php
+RewriteRule ^(.*)$ index.php [QSA,L]
