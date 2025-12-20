@@ -54,6 +54,8 @@
             .modal-overlay.open { @apply flex opacity-100; }
         }
     </style>
+
+    <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/styles.css">
 </head>
 
 <body class="flex flex-col min-h-screen">

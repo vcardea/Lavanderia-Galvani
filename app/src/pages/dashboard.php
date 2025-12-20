@@ -129,6 +129,38 @@ require SRC_PATH . '/templates/header.php';
     <?php endforeach; ?>
 </div>
 
+<div id="delayModal" class="modal-overlay">
+    <div class="bg-card w-[90%] max-w-sm rounded-xl p-6 shadow-2xl border border-zinc-700 transform transition-all scale-100">
+        <div class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+            <span>⏱️</span> <?= __('modal_delay_title') ?>
+        </div>
+        <p class="text-gray-400 mb-6 text-sm leading-relaxed">
+            <?= __('modal_delay_desc') ?> <br>
+            <span class="text-accent font-bold" id="delayMachineName"></span>
+        </p>
+
+        <input type="hidden" id="delayMachineId">
+
+        <div class="flex items-center justify-center gap-4 mb-6">
+            <button type="button" onclick="adjustDelay(-5)" class="p-3 bg-zinc-800 rounded-lg hover:bg-zinc-700 text-white">-5</button>
+            <div class="relative w-24">
+                <input type="number" id="delayInput" value="0" min="0" max="120" class="w-full bg-black border border-zinc-600 rounded-lg py-2 text-center text-2xl font-bold text-white focus:border-accent focus:ring-1 focus:ring-accent outline-none">
+                <span class="absolute right-2 bottom-3 text-[10px] text-gray-500">min</span>
+            </div>
+            <button type="button" onclick="adjustDelay(+5)" class="p-3 bg-zinc-800 rounded-lg hover:bg-zinc-700 text-white">+5</button>
+        </div>
+
+        <div class="flex gap-3">
+            <button onclick="closeDelayModal()" class="flex-1 px-4 py-3 rounded bg-zinc-700 text-white font-medium hover:bg-zinc-600 transition-colors">
+                <?= __('btn_cancel') ?>
+            </button>
+            <button onclick="saveDelay()" class="flex-1 px-4 py-3 rounded font-bold text-white bg-yellow-600 hover:bg-yellow-500 shadow-lg shadow-yellow-900/20 transition-colors">
+                <?= __('btn_update_delay') ?>
+            </button>
+        </div>
+    </div>
+</div>
+
 <div id="bookingModal" class="modal-overlay">
     <div class="bg-card w-[90%] max-w-sm rounded-xl p-6 shadow-2xl border border-zinc-700 transform transition-all scale-100">
         <div class="text-xl font-bold text-white mb-2" id="modalTitle"></div>

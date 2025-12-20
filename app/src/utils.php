@@ -8,8 +8,6 @@ class Utils
 
     /**
      * Controlla se l'utente è loggato.
-     *
-     * @return bool True se l'utente è loggato, false altrimenti.
      */
     static function is_logged()
     {
@@ -18,8 +16,6 @@ class Utils
 
     /**
      * Controlla se l'utente loggato è un amministratore.
-     *
-     * @return bool True se l'utente è un amministratore, false altrimenti.
      */
     static function is_admin()
     {
@@ -32,7 +28,8 @@ class Utils
     static function is_already_logged()
     {
         if (self::is_logged()) {
-            header("Location: " . BASE_URL . "/pages/dashboard.php");
+            // ERRORE ERA QUI: Rimuovi "/pages" e ".php"
+            header("Location: " . BASE_URL . "/dashboard");
             exit;
         }
     }
@@ -49,21 +46,25 @@ class Utils
     }
 
     /**
-     * Reindirizza al login se l'utente non è un amministratore.
+     * Gestione intelligente accesso Admin
      */
     static function admin_only()
     {
-        if (!self::is_admin()) {
+        // 1. Se non è loggato, va al login
+        if (!self::is_logged()) {
             header("Location: " . BASE_URL . "/login");
+            exit;
+        }
+
+        // 2. Se è loggato ma non è admin, va alla dashboard (invece che al login)
+        if (!self::is_admin()) {
+            header("Location: " . BASE_URL . "/dashboard");
             exit;
         }
     }
 
     /**
-     * Recupera il valore precedente di un campo del modulo in caso di errore di validazione.
-     *
-     * @param string $field Il nome del campo del modulo.
-     * @return string Il valore precedente del campo, o una stringa vuota se non esiste.
+     * Recupera il valore precedente di un campo del modulo...
      */
     function old($field)
     {

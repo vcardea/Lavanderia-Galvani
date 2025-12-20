@@ -186,4 +186,12 @@ return [
     // Sezione 5
     'priv_s5_title' => '5. Cookie Policy',
     'priv_s5_desc' => 'Utilizziamo esclusivamente <strong>Cookie Tecnici</strong> (Session ID) necessari per mantenere l\'accesso attivo mentre navighi. Non effettuiamo tracciamento, profilazione pubblicitaria né usiamo analytics di terze parti invasive.',
+
+    // Segnalazione Ritardo
+    'lbl_delay' => 'Ritardo',
+    'lbl_delay_min' => 'min',
+    'modal_delay_title' => 'Segnala Ritardo',
+    'modal_delay_desc' => 'Inserisci i minuti di ritardo accumulati da questa macchina per avvisare i prossimi utenti.',
+    'btn_update_delay' => 'Aggiorna Ritardo',
+    'delay_saved' => 'Ritardo aggiornato!',
 ];

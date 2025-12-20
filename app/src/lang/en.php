@@ -185,4 +185,12 @@ return [
     // Section 5
     'priv_s5_title' => '5. Cookie Policy',
     'priv_s5_desc' => 'We use exclusively <strong>Technical Cookies</strong> (Session ID) necessary to keep access active while browsing. We do not track, profile for advertising, or use invasive third-party analytics.',
+
+    // Delay Reporting
+    'lbl_delay' => 'Delay',
+    'lbl_delay_min' => 'min',
+    'modal_delay_title' => 'Report Delay',
+    'modal_delay_desc' => 'Enter the minutes of delay accumulated by this machine to notify next users.',
+    'btn_update_delay' => 'Update Delay',
+    'delay_saved' => 'Delay updated!',
 ];

@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
-require_once SRC_PATH . '/utils.php';
-require_once SRC_PATH . '/config/database.php';
+require_once __DIR__ . '/../utils.php';
+require_once __DIR__ . '/../config/database.php';
 
 if (!Utils::is_logged()) {
     exit(json_encode(['success' => false]));
@@ -13,7 +13,7 @@ try {
     $database = new Database();
     $db = $database->getConnection();
 
-    // JOIN con la tabella utenti per prendere lo username
+    // 1. Recupero Prenotazioni (Come prima)
     $sql = "
         SELECT p.idprenotazione, p.idmacchina, p.data_prenotazione, p.ora_inizio, p.stato, p.idutente, u.username
         FROM prenotazioni p
@@ -39,7 +39,7 @@ try {
     $prenotazioni = [];
     foreach ($rows as $row) {
         $prenotazioni[] = [
-            'idprenotazione' => $row['idprenotazione'], // Serve per cancellare
+            'idprenotazione' => $row['idprenotazione'],
             'idmacchina' => $row['idmacchina'],
             'data_prenotazione' => $row['data_prenotazione'],
             'ora_inizio' => $row['ora_inizio'],
@@ -49,7 +49,16 @@ try {
         ];
     }
 
-    echo json_encode(['success' => true, 'prenotazioni' => $prenotazioni]);
+    // 2. RECUPERO STATO MACCHINE (Ritardo e Stato) - NUOVO PEZZO
+    // Questo serve per aggiornare l'header della colonna in tempo reale
+    $stmtM = $db->query("SELECT idmacchina, stato, ritardo FROM macchine");
+    $macchineStatus = $stmtM->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode([
+        'success' => true,
+        'prenotazioni' => $prenotazioni,
+        'macchine' => $macchineStatus // Inviamo anche i metadati aggiornati
+    ]);
 } catch (Exception $e) {
     echo json_encode(['success' => false]);
 }

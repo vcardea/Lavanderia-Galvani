@@ -34,7 +34,7 @@ switch ($path) {
     case '':
     case '/':
     case 'home':
-    case '/lavanderia-galvani':
+        // Utils::is_already_logged();
         require SRC_PATH . '/pages/dashboard.php';
         break;
         
