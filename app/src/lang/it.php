@@ -32,6 +32,8 @@ return [
     'lbl_max_hours' => 'Max Ore Settimanali per Utente',
     'btn_save' => 'Salva Modifiche',
     'note_immediate_effect' => '*Questa modifica ha effetto immediato su tutte le nuove prenotazioni.',
+    'delete_user' => 'Elimina',
+    'reset_user_pwd' => 'Resetta Password',
 
     'admin_sect_machines' => 'Stato Macchine',
     'th_name' => 'Nome',
@@ -106,6 +108,7 @@ return [
     'err_missing_id' => 'ID prenotazione mancante',
     'err_booking_expired' => 'Prenotazione non trovata o scaduta.',
     'err_tech_confirm' => 'Errore tecnico durante la conferma.',
+    'err_missing_params' => 'Parametri mancanti',
 
     // --- FOOTER & PRIVACY ---
     'footer_desc' => 'Sistema di prenotazione lavatrici e asciugatrici per lo studentato Galvani.',
@@ -194,4 +197,15 @@ return [
     'modal_delay_desc' => 'Inserisci i minuti di ritardo accumulati da questa macchina per avvisare i prossimi utenti.',
     'btn_update_delay' => 'Aggiorna Ritardo',
     'delay_saved' => 'Ritardo aggiornato!',
+
+    // Lavanderia
+    'Lavatrice 1' => 'Lavatrice 1',
+    'Lavatrice 2' => 'Lavatrice 2',
+    'Asciugatrice' => 'Asciugatrice',
+    'lavatrice' => 'Lavatrice',
+    'asciugatrice' => 'Asciugatrice',
+
+    // Messaggi
+    'no_other_registered_users' => 'Nessun altro utente registrato.',
+    'no_other_users' => 'Nessun altro utente.',
 ];

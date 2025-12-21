@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lavanderia Galvani</title>
 
+    <link rel="icon" type="image/svg+xml" href="<?= BASE_URL ?>/public/img/favicon.svg">
+    <link rel="apple-touch-icon" href="<?= BASE_URL ?>/public/img/favicon.svg">
+    <meta name="theme-color" content="#1e1e1e">
+
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
@@ -55,7 +59,7 @@
         }
     </style>
 
-    <link rel="stylesheet" href="<?= BASE_URL ?>/public/css/styles.css">
+    <!-- <link rel="stylesheet" href="/public/css/styles.css"> -->
 </head>
 
 <body class="flex flex-col min-h-screen">
@@ -69,13 +73,13 @@
                     <span>🧺</span> <span>Lavanderia</span>
                 </a>
 
-                <?php if (isset($_SESSION['user_id'])): ?>
+                <?php if (Utils::is_logged()): ?>
                     <nav class="hidden sm:flex items-center gap-1 bg-zinc-900/50 p-1 rounded-lg border border-zinc-800">
                         <a href="<?= BASE_URL ?>/dashboard"
                             class="text-sm font-medium px-4 py-2 rounded transition-all hover:bg-zinc-700 <?= (strpos($_SERVER['REQUEST_URI'], 'dashboard') !== false) ? 'text-white bg-zinc-800 shadow-sm' : 'text-gray-400' ?>">
                             <?= __('nav_dashboard') ?>
                         </a>
-                        <?php if ($_SESSION['ruolo'] === 'admin'): ?>
+                        <?php if (Utils::is_admin()): ?>
                             <a href="<?= BASE_URL ?>/admin"
                                 class="text-sm font-medium px-4 py-2 rounded transition-all hover:bg-zinc-700 <?= (strpos($_SERVER['REQUEST_URI'], 'admin') !== false) ? 'text-accent bg-zinc-800 shadow-sm' : 'text-gray-400 hover:text-accent' ?>">
                                 <?= __('nav_admin') ?>

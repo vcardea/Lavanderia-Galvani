@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Creato il: Dic 20, 2025 alle 22:12
+-- Creato il: Dic 21, 2025 alle 14:40
 -- Versione del server: 10.4.32-MariaDB
 -- Versione PHP: 8.2.12
 
@@ -49,17 +49,18 @@ CREATE TABLE `macchine` (
   `idmacchina` int(11) NOT NULL,
   `nome` varchar(50) NOT NULL,
   `tipo` enum('lavatrice','asciugatrice') NOT NULL,
-  `stato` enum('attiva','manutenzione') DEFAULT 'attiva'
+  `stato` enum('attiva','manutenzione') DEFAULT 'attiva',
+  `ritardo` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dump dei dati per la tabella `macchine`
 --
 
-INSERT INTO `macchine` (`idmacchina`, `nome`, `tipo`, `stato`) VALUES
-(1, 'Lavatrice 1', 'lavatrice', 'attiva'),
-(2, 'Lavatrice 2', 'lavatrice', 'attiva'),
-(3, 'Asciugatrice', 'asciugatrice', 'attiva');
+INSERT INTO `macchine` (`idmacchina`, `nome`, `tipo`, `stato`, `ritardo`) VALUES
+(1, 'Lavatrice 1', 'lavatrice', 'attiva', 0),
+(2, 'Lavatrice 2', 'lavatrice', 'attiva', 0),
+(3, 'Asciugatrice', 'asciugatrice', 'attiva', 0);
 
 -- --------------------------------------------------------
 
@@ -101,11 +102,7 @@ CREATE TABLE `utenti` (
 --
 
 INSERT INTO `utenti` (`idutente`, `email`, `password_hash`, `nome`, `numero_appartamento`, `username`, `ruolo`, `data_registrazione`) VALUES
-(6, 'vincenzo.cardea@studio.unibo.it', '$2y$10$vpkLhAaDqB.3hOXcv18zZOZ5w.JzlHlfZ2GxclXhYkwPJkjemB66q', 'Vincenzo', '23', 'vincenzo23-84', 'user', '2025-12-20 22:09:54');
-
-UPDATE utenti
-SET ruolo = 'admin'
-WHERE email LIKE 'vincenzo.cardea@studio.unibo.it';
+(6, 'vincenzo.cardea@studio.unibo.it', '$2y$10$vpkLhAaDqB.3hOXcv18zZOZ5w.JzlHlfZ2GxclXhYkwPJkjemB66q', 'Vincenzo', '23', 'vincenzo23-84', 'admin', '2025-12-20 22:09:54');
 
 --
 -- Indici per le tabelle scaricate
@@ -154,13 +151,13 @@ ALTER TABLE `macchine`
 -- AUTO_INCREMENT per la tabella `prenotazioni`
 --
 ALTER TABLE `prenotazioni`
-  MODIFY `idprenotazione` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
+  MODIFY `idprenotazione` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
 
 --
 -- AUTO_INCREMENT per la tabella `utenti`
 --
 ALTER TABLE `utenti`
-  MODIFY `idutente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `idutente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Limiti per le tabelle scaricate

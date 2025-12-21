@@ -39,9 +39,18 @@ try {
     $dataTarget = new DateTime($prenotazione['data_prenotazione']);
     $oraInizio = new DateTime($prenotazione['data_prenotazione'] . ' ' . $prenotazione['ora_inizio']);
     $adesso = new DateTime();
+    $settimanaProssima = (clone $adesso)->modify('+1 week')->format('oW');
+    $ora = $oraInizio->format('H');
 
     // A. Controllo Settimana Corrente
-    if ($dataTarget->format('oW') !== $adesso->format('oW')) {
+    if (
+        $dataTarget->format('oW') !== $adesso->format('oW') &&
+        !(
+            $dataTarget->format('oW') === $settimanaProssima && // È la settimana prossima
+            $dataTarget->format('N') == 1 &&                    // È Lunedì (1)
+            (int)$ora === 0                                      // È mezzanotte
+        )
+    ) {
         exit(json_encode(['success' => false, 'message' => __('err_future_date') . " ({$dataTarget->format('d/m/Y')})"]));
     }
 

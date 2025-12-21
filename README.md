@@ -8,7 +8,7 @@
 
 > **Centralized booking system for washing machines and dryers at the Galvani student hall.**
 
-A **Mobile-First** web application designed to resolve conflicts between tenants, prevent usage monopolies, and ensure fair access to common resources. Developed with a focus on **Privacy (GDPR)**, **Performance**, and **Simplicity**.
+A **Mobile-First** web application designed to resolve conflicts between tenants, prevent usage monopolies, and ensure fair access to common resources. Developed with a focus on **Privacy (GDPR)**, **Strict Validation**, and **Simplicity**.
 
 ---
 
@@ -16,29 +16,32 @@ A **Mobile-First** web application designed to resolve conflicts between tenants
 
 ### 🔒 Core & Security
 
-- **Institutional Authentication**: Registration allowed only via `@studio.unibo.it` or `@unibo.it` emails.
-- **Privacy by Design**: Users are publicly identified via generated Usernames (e.g., `vincenzo12-89`) to protect real data.
-- **Password Hashing**: Use of `PASSWORD_BCRYPT` for maximum security.
-- **GDPR Compliant**: Right to be forgotten with an irreversible anonymization procedure.
+- **Institutional Authentication**: Registration restricted to `@studio.unibo.it` or `@unibo.it` domains.
+- **Privacy by Design**: Users are identified publicly only via randomized Usernames (e.g., `vincenzo12-89`).
+- **Robust Security**: `PASSWORD_BCRYPT` hashing and strict server-side input validation to prevent manipulation.
+- **GDPR Compliant**: Includes "Right to be forgotten" with irreversible data anonymization.
 
 ### 📅 Booking & Logic
 
-- **Pessimistic Locking**: Real-time anti-collision system. If two users click the same slot simultaneously, the database manages concurrency.
-- **Weekly Limits**: Dynamic configuration to limit the number of bookable hours per week per user (Anti-Monopoly).
-- **Time Slots**: Intelligent management of past and future slots (open only for the current week).
+- **Concurrency Control**: Pessimistic locking logic to prevent double-booking of the same slot.
+- **Fair Usage Policy**: Dynamic weekly hour limits per user to prevent monopolies.
+- **Smart Validation**:
+  - Prevents booking in the past.
+  - Restricts bookings to the current active week cycle.
+  - Server-side date comparison (DateTime object oriented).
 
 ### 📱 UI/UX
 
-- **Native Dark Mode**: Modern dark interface, easy on the eyes.
-- **Mobile First**: Optimized for smartphone use ("Thumb Zone" navigation).
-- **Immediate Feedback**: Modals and toast notifications for every action (confirmation, error, loading).
+- **Native Dark Mode**: Interface designed for low-light environments.
+- **Mobile First**: "Thumb Zone" navigation optimization for smartphones.
+- **Reactive Interface**: Instant feedback via toast notifications (Success/Error/Warning).
 - **Multi-language**: Native support for Italian 🇮🇹 and English 🇬🇧.
 
 ### 🛠 Admin Panel
 
-- **Machine Management**: Set washing machines to maintenance/active status with a single click.
-- **User Management**: Password reset and anonymization of problematic users.
-- **Global Configuration**: Modify booking limits in real-time without touching the code.
+- **Asset Management**: Toggle machine status (Active/Maintenance) instantly.
+- **User Oversight**: Reset passwords and anonymize problematic users.
+- **Config Hot-Swap**: Adjust global booking limits without redeploying code.
 
 ---
 
@@ -47,18 +50,18 @@ A **Mobile-First** web application designed to resolve conflicts between tenants
 |   Device    |               Dashboard                |                Slot Booking                |               Admin Panel                |
 | :---------: | :------------------------------------: | :----------------------------------------: | :--------------------------------------: |
 | **Desktop** |    ![PC Dash](./screen/pc-dash.png)    |    ![PC Booking](./screen/pc-modal.png)    |    ![PC Admin](./screen/pc-admin.png)    |
-| **Mobile**  | ![Phone Dash](./screen/phone-dash.png) | ![Phone Booking](./screen/phone-modal.png) | ![Phone Admin](./screen/phone-admin.png) |
+| **Mobile**  | ![Phone Dash](./screen/phone-dash.jpeg) | ![Phone Booking](./screen/phone-modal.jpeg) | ![Phone Admin](./screen/phone-admin.jpeg) |
 
 ---
 
 ## 🏗 Tech Stack
 
-The project is built to be lightweight and easily deployable on any shared hosting or standard VPS.
+Built to be lightweight, dependency-free, and deployable on any standard LAMP/LEMP stack.
 
-- **Backend**: PHP 8.x (Vanilla, No Framework Bloat)
-- **Database**: MySQL
-- **Frontend**: HTML5, JavaScript (ES6+), Tailwind CSS (via CDN for rapid prototyping)
-- **Architecture**: Custom MVC-like routing (`index.php` as entry point)
+- **Backend**: PHP 8.x (Vanilla, Strict Typing)
+- **Database**: MySQL / MariaDB
+- **Frontend**: HTML5, JavaScript (ES6+), Tailwind CSS (CDN)
+- **Architecture**: Custom MVC-like routing (`index.php` entry point)
 
 ---
 
@@ -81,32 +84,36 @@ The project is built to be lightweight and easily deployable on any shared hosti
 
 2.  **Configure the Database**
 
-    - Create an empty database (e.g., `lavanderia`).
-    - Import the `database.sql` file (found in the root) to create tables and initial data.
+    - Create a database named `lavanderia`.
+    - Import the schema and initial data:
 
-    ```sql
-    -- Example CLI import
+    ```bash
     mysql -u root -p lavanderia < database.sql
     ```
 
-3.  **Configure the connection**
+3.  **Configure Environment**
 
-    - Open `src/config/database.php`.
-    - Modify the parameters with your local credentials:
+    - Open `src/config/database.php` and update credentials:
 
     ```php
     private $host = "localhost";
     private $db_name = "lavanderia";
     private $username = "root";
-    private $password = "";
+    private $password = "your_password";
     ```
 
+    > **Note:** Ensure your PHP configuration (`php.ini`) has the correct timezone set to prevent booking logic errors:
+    > `date.timezone = Europe/Rome`
+
 4.  **Start the Server**
-    - If using PHP built-in server (for rapid development):
+
+    If using the PHP built-in server:
+
     ```bash
     php -S localhost:8000
     ```
-    - Visit `http://localhost:8000` in your browser.
+
+    Access via `http://localhost:8000`.
 
 ---
 
@@ -115,18 +122,19 @@ The project is built to be lightweight and easily deployable on any shared hosti
 ```text
 /
 ├── src/
-│   ├── api/            # AJAX Endpoints (JSON responses)
-│   ├── auth/           # Login/Register/Logout logic
-│   ├── config/         # DB Connection
-│   ├── lang/           # Translation files (it.php, en.php)
-│   ├── pages/          # Views (Dashboard, Admin, Privacy)
-│   ├── templates/      # Header, Footer, partials
-│   ├── Lang.php        # Language management class
-│   └── utils.php       # Helper functions
+│   ├── api/            # JSON Endpoints (Booking, Auth, Status)
+│   ├── auth/           # Session & Authentication Logic
+│   ├── config/         # Database & Global Constants
+│   ├── lang/           # i18n Dictionaries (it.php, en.php)
+│   ├── pages/          # View Controllers
+│   ├── templates/      # Reusable Layout Components
+│   ├── Lang.php        # Translation Helper
+│   └── utils.php       # Sanitization & Formatting
 ├── public/
-│   ├── css/            # Custom CSS (if needed beyond Tailwind)
-│   └── js/             # Main App Logic (app.js)
-├── database.sql        # DB Schema and Initial Data
+│   ├── css/            # Custom Overrides
+│   ├── js/             # Client-side Logic (app.js)
+│   └── img/            # Static Assets
+├── database.sql        # Database Schema
 ├── index.php           # Main Router
 └── README.md           # Documentation
 ```

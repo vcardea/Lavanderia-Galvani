@@ -32,6 +32,8 @@ return [
     'lbl_max_hours' => 'Max Weekly Hours per User',
     'btn_save' => 'Save Changes',
     'note_immediate_effect' => '*This change affects all new bookings immediately.',
+    'delete_user' => 'Delete',
+    'reset_user_pwd' => 'Reset Password',
 
     'admin_sect_machines' => 'Machines Status',
     'th_name' => 'Name',
@@ -106,6 +108,7 @@ return [
     'err_missing_id' => 'Missing booking ID',
     'err_booking_expired' => 'Booking not found or expired.',
     'err_tech_confirm' => 'Technical error during confirmation.',
+    'err_missing_params' => 'Missing parameters',
 
     // --- FOOTER & PRIVACY ---
     'footer_desc' => 'Washing machine and dryer booking system for Galvani student hall.',
@@ -193,4 +196,15 @@ return [
     'modal_delay_desc' => 'Enter the minutes of delay accumulated by this machine to notify next users.',
     'btn_update_delay' => 'Update Delay',
     'delay_saved' => 'Delay updated!',
+
+    // Laundry
+    'Lavatrice 1' => 'Washing Machine 1',
+    'Lavatrice 2' => 'Washing Machine 2',
+    'Asciugatrice' => 'Dryer',
+    'lavatrice' => 'Washing Machine',
+    'asciugatrice' => 'Dryer',
+
+    // Messages
+    'no_other_registered_users' => 'No other registered users.',
+    'no_other_users' => 'No other users.',
 ];

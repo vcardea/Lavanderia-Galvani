@@ -21,8 +21,16 @@ try {
     $oggi = new DateTime();
     $dataTarget = new DateTime($data);
     $inizioSlot = new DateTime("$data $ora:00:00");
+    $settimanaProssima = (clone $oggi)->modify('+1 week')->format('oW');
 
-    if ($dataTarget->format('oW') !== $oggi->format('oW')) {
+    if (
+        $dataTarget->format('oW') !== $oggi->format('oW') &&
+        !(
+            $dataTarget->format('oW') === $settimanaProssima && // È la settimana prossima
+            $dataTarget->format('N') == 1 &&                    // È Lunedì (1)
+            (int)$ora == 0                                      // È mezzanotte
+        )
+    ) {
         exit(json_encode(['success' => false, 'message' => __('err_current_week_only')]));
     }
 

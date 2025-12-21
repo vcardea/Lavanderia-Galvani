@@ -5,6 +5,7 @@ date_default_timezone_set('Europe/Rome');
 define('SRC_PATH', __DIR__ . '/src');
 define('BASE_PATH', __DIR__);
 
+// Utilità
 require_once SRC_PATH . '/utils.php';
 
 // 2. Sessione
@@ -34,10 +35,11 @@ switch ($path) {
     case '':
     case '/':
     case 'home':
-        // Utils::is_already_logged();
+    case 'lavanderia-galvani': // Gestione sottocartella se serve
+        Utils::not_logged_yet();
         require SRC_PATH . '/pages/dashboard.php';
         break;
-        
+
     case 'login':
         Utils::is_already_logged();
         require SRC_PATH . '/auth/login.php';
@@ -67,6 +69,7 @@ switch ($path) {
         require SRC_PATH . '/pages/privacy.php';
         break;
 
+    // --- API ROUTES ---
     case 'api/read':
         require SRC_PATH . '/api/read.php';
         break;
@@ -87,8 +90,12 @@ switch ($path) {
         require SRC_PATH . '/api/unlock.php';
         break;
 
+    case 'api/delay':
+        require SRC_PATH . '/api/delay.php';
+        break;
+
     default:
         http_response_code(404);
-        htmlspecialchars("404 - Pagina non trovata (Path richiesto: $path)");
+        echo htmlspecialchars("404 - Pagina non trovata (Path richiesto: $path)");
         break;
 }
