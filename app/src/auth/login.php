@@ -82,7 +82,6 @@ require SRC_PATH . '/templates/header.php';
 </div>
 <script>
     function togglePassword() {
-        // ... (Script uguale a prima)
         const input = document.getElementById('passwordInput');
         const iconClosed = document.getElementById('eyeIconClosed');
         const iconOpen = document.getElementById('eyeIconOpen');

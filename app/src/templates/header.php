@@ -122,7 +122,8 @@
                                 Accedi
                             </a>
 
-                            <a href="<?= BASE_URL ?>/register" class="text-sm font-bold bg-accent hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all shadow-lg shadow-blue-900/20 whitespace-nowrap">
+                            <a href="/register"
+                                class="hidden md:inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
                                 Registrati
                             </a>
                         </div>

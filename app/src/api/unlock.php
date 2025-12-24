@@ -1,8 +1,15 @@
 <?php
 header('Content-Type: application/json');
 require_once SRC_PATH . '/config/database.php';
+require_once SRC_PATH . '/utils.php';
 
-if (!isset($_SESSION['user_id'])) exit(json_encode(['success' => false]));
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    exit(json_encode(['success' => false, 'message' => __('err_method')]));
+}
+
+if (!Utils::is_logged()) {
+    exit(json_encode(['success' => false, 'message' => __('err_login_required')]));
+}
 
 $lockId = $_POST['lock_id'] ?? 0;
 

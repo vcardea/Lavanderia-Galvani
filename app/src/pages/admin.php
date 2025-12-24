@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $msgType = 'error';
         }
     }
-    if (isset($_POST['action']) && $_POST['action'] === 'toggle_machine') {
+    elseif (isset($_POST['action']) && $_POST['action'] === 'toggle_machine') {
         $idMacchina = $_POST['id_macchina'];
         $currentStatus = $_POST['current_status'];
         $newStatus = ($currentStatus === 'attiva') ? 'manutenzione' : 'attiva';
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statusLabel = ($newStatus === 'attiva') ? __('st_active') : __('st_maint');
         $msg = sprintf(__('msg_machine_updated'), strtoupper($statusLabel));
     }
-    if (isset($_POST['action']) && $_POST['action'] === 'reset_password') {
+    elseif (isset($_POST['action']) && $_POST['action'] === 'reset_password') {
         $userId = $_POST['user_id'];
         $newPass = bin2hex(random_bytes(4));
         $newHash = password_hash($newPass, PASSWORD_BCRYPT);
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$newHash, $userId]);
         $msg = __('msg_pass_reset') . " <strong class='font-mono bg-black px-2 py-1 rounded text-accent'>" . htmlspecialchars($newPass) . "</strong>";
     }
-    if (isset($_POST['action']) && $_POST['action'] === 'delete_user') {
+    elseif (isset($_POST['action']) && $_POST['action'] === 'delete_user') {
         $userId = $_POST['user_id'];
         $anonimo = "Utente Cancellato";
         $dummyEmail = "deleted_$userId@anon.imo";
