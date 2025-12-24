@@ -122,7 +122,7 @@
                                 Accedi
                             </a>
 
-                            <a href="/register"
+                            <a href="<?= BASE_URL ?>/register"
                                 class="hidden md:inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
                                 Registrati
                             </a>
@@ -146,7 +146,7 @@
                         </a>
                     <?php endif; ?>
                     <div class="px-3 py-2 text-sm text-gray-500 border-t border-zinc-800 mt-2">
-                        Loggato come: <span class="text-gray-300 font-bold"><?= htmlspecialchars($_SESSION['username']) ?></span>
+                        <?= __('logged_in_as') ?>: <span class="text-gray-300 font-bold"><?= htmlspecialchars($_SESSION['username']) ?></span>
                     </div>
                 </div>
             <?php endif; ?>

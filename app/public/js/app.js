@@ -1,22 +1,45 @@
 /**
  * PUBLIC/JS/APP.JS
- * Fix Cancellazione + Gestione Ritardi
+ * Gestione Prenotazioni, Cancellazioni e Ritardi.
+ *
+ * Logica principale:
+ * 1. Fetch periodico dello stato (polling).
+ * 2. Sistema di "Locking" ottimistico per prenotare.
+ * 3. Gestione visiva tramite classi Tailwind.
  */
 
+// --- STATO GLOBALE ---
+
+/** Elemento DOM dello slot attualmente selezionato per interazione. */
 let currentSlotElement = null;
+
+/** ID del lock o della prenotazione corrente. Usato per confermare/cancellare. */
 let currentLockId = null;
+
+/** Riferimento all'intervallo del timer del modale (countdown). */
+let modalTimerInterval = null;
+
+/** Riferimento all'intervallo del polling delle prenotazioni. */
+let pollingInterval = null;
+
+// --- INIZIALIZZAZIONE ---
 
 document.addEventListener("DOMContentLoaded", function () {
   const urlParams = new URLSearchParams(window.location.search);
+  // Usa la data nell'URL o, fallback, la data odierna (YYYY-MM-DD)
   const currentDate =
     urlParams.get("date") || new Date().toISOString().split("T")[0];
 
+  // Primo caricamento immediato
   fetchPrenotazioni(currentDate);
-  setInterval(() => fetchPrenotazioni(currentDate), 3000);
 
-  // Listener chiusura modali
+  // Polling ogni 3 secondi per aggiornare la griglia
+  pollingInterval = setInterval(() => fetchPrenotazioni(currentDate), 3000);
+
+  // Gestione chiusura modali cliccando sull'overlay scuro
   document.querySelectorAll(".modal-overlay").forEach((modal) => {
     modal.addEventListener("click", (e) => {
+      // Verifica che il click sia proprio sull'overlay e non sul contenuto
       if (e.target.classList.contains("modal-overlay")) {
         if (modal.id === "bookingModal") handleCloseModal();
         if (modal.id === "delayModal") closeDelayModal();
@@ -25,38 +48,49 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// --- LOGICA DI PRENOTAZIONE (CORE) ---
+
+/**
+ * Gestisce il click su uno slot della griglia.
+ * Determina se avviare una prenotazione, una cancellazione o mostrare info.
+ *
+ * @param {HTMLElement} element - L'elemento DOM dello slot cliccato.
+ */
 async function prenotaSlot(element) {
   currentSlotElement = element;
   const machineId = element.dataset.machine;
   const date = element.dataset.date;
   const hour = element.dataset.hour;
+  // Recupera l'etichetta oraria visiva o costruisce una stringa fallback
   const timeLabel =
     element.querySelector(".time-label")?.innerText || hour + ":00";
 
+  // Ignora slot passati
   if (element.classList.contains("past")) return;
 
-  // 1. SLOT OCCUPATO
+  // 1. SCENARIO: SLOT OCCUPATO (DA ALTRI O IN ATTESA)
   if (
     element.classList.contains("taken") ||
     element.classList.contains("pending")
   ) {
     let msg = element.classList.contains("pending")
-      ? t("status_pending")
-      : `${t("status_taken")} (${element.dataset.username || "..."})`;
+      ? t("status_pending") // "In attesa..."
+      : `${t("status_taken")} (${element.dataset.username || "..."})`; // "Occupato da (User)"
+
     openModal(t("msg_info"), msg, "info");
     return;
   }
 
-  // 2. CANCELLAZIONE (FIX QUI)
+  // 2. SCENARIO: CANCELLAZIONE (SLOT MIO)
   if (element.classList.contains("mine")) {
-    // PRENDIAMO L'ID DAL DATASET
     currentLockId = element.dataset.idprenotazione;
 
+    // Fallback: Se l'ID manca nel DOM, prova a ricaricare i dati dal server
     if (!currentLockId) {
-      // Se per qualche motivo manca, ricarichiamo i dati
-      console.error("ID Prenotazione mancante nel DOM");
+      console.warn("ID Prenotazione mancante nel DOM. Tentativo di refresh...");
       await fetchPrenotazioni(date);
       currentLockId = element.dataset.idprenotazione;
+
       if (!currentLockId) {
         openModal(
           t("msg_error"),
@@ -76,40 +110,56 @@ async function prenotaSlot(element) {
     return;
   }
 
-  // 3. NUOVA PRENOTAZIONE
+  // 3. SCENARIO: NUOVA PRENOTAZIONE (LOCK)
+  // Feedback visivo immediato (opacity) per indicare elaborazione
   element.style.opacity = "0.5";
+
   try {
+    // Chiamata API per ottenere un "Lock" temporaneo
     const response = await fetch(BASE_URL + "/api/lock", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `idmacchina=${machineId}&data=${date}&ora=${hour}`,
     });
     const result = await response.json();
-    element.style.opacity = "1";
+
+    element.style.opacity = "1"; // Ripristina opacità
 
     if (result.success) {
       currentLockId = result.lock_id;
       updateSlotVisual(element, "pending", t("status_pending"));
+
+      // Apre il modale di conferma con un timer (es. 60 secondi di lock)
+      // Nota: La durata del timer dovrebbe matchare quella del server.
       openModal(
         t("modal_confirm_title"),
         `${t("modal_booking_msg")} <b>${timeLabel}</b>.<br>${t(
           "btn_confirm"
         )}?`,
         "confirm",
-        confirmBooking
+        confirmBooking,
+        119 // Durata timer in secondi
       );
     } else {
+      // Lock fallito (es. qualcun altro ha cliccato un ms prima)
       openModal(t("msg_info"), result.message, "info");
       fetchPrenotazioni(date);
     }
   } catch (e) {
     element.style.opacity = "1";
+    console.error("Errore Lock:", e);
     openModal(t("msg_error"), t("err_server"), "info");
   }
 }
 
+/**
+ * Conferma la prenotazione dopo aver ottenuto il Lock.
+ * Inviata quando l'utente clicca "Conferma" nel modale.
+ */
 async function confirmBooking() {
   const btn = document.querySelector(".btn-confirm");
+
+  // UI: Disabilita il bottone per evitare doppi click
   if (btn) {
     btn.disabled = true;
     btn.innerText = "...";
@@ -122,44 +172,50 @@ async function confirmBooking() {
       body: `lock_id=${currentLockId}`,
     });
 
-    // --- MODIFICA DEBUG INIZIO ---
-    const textRaw = await response.text(); // Leggiamo la risposta grezza
-    // console.log("Risposta Server:", textRaw); // Guardala nella Console (F12)
-
+    // DEBUG: Leggiamo come testo per intercettare errori PHP non-JSON
+    const textRaw = await response.text();
     let result;
     try {
-      result = JSON.parse(textRaw); // Proviamo a convertirla
+      result = JSON.parse(textRaw);
     } catch (e) {
-      throw new Error("Il server non ha risposto con JSON valido: " + textRaw);
+      throw new Error("Risposta server non valida (non-JSON): " + textRaw);
     }
-    // --- MODIFICA DEBUG FINE ---
 
     if (result.success) {
+      // Aggiornamento ottimistico dell'UI
       if (currentSlotElement) {
         updateSlotVisual(currentSlotElement, "mine", t("status_mine"));
-        currentSlotElement.dataset.idprenotazione = currentLockId;
+        currentSlotElement.dataset.idprenotazione = currentLockId; // Aggiorna ID persistente
       }
+
+      // Reset variabili di stato
       currentLockId = null;
       closeModalRaw();
-      if (currentSlotElement)
+
+      // Refresh di sicurezza dei dati
+      if (currentSlotElement) {
         setTimeout(
           () => fetchPrenotazioni(currentSlotElement.dataset.date),
           500
         );
+      }
     } else {
+      // Errore logico (es. Lock scaduto)
       closeModalRaw();
       openModal(t("msg_info"), result.message, "info");
       if (currentSlotElement)
         fetchPrenotazioni(currentSlotElement.dataset.date);
     }
   } catch (e) {
-    console.error("Errore fetch:", e); // Vedi l'errore specifico
+    console.error("Errore Confirm:", e);
     closeModalRaw();
-    // Mostra l'errore tecnico nell'alert invece di "Errore Rete" generico
     openModal(t("msg_error"), e.message, "error");
   }
 }
 
+/**
+ * Conferma la cancellazione di una prenotazione esistente.
+ */
 async function confirmCancellation() {
   if (!currentLockId) return;
 
@@ -173,10 +229,12 @@ async function confirmCancellation() {
 
     if (result.success) {
       closeModalRaw();
+      // Aggiornamento ottimistico
       if (currentSlotElement) {
         updateSlotVisual(currentSlotElement, "free", t("status_free"));
         delete currentSlotElement.dataset.idprenotazione;
       }
+      // Sync finale
       fetchPrenotazioni(currentSlotElement.dataset.date);
     } else {
       closeModalRaw();
@@ -190,6 +248,12 @@ async function confirmCancellation() {
 
 // --- FUNZIONI RITARDO ---
 
+/**
+ * Apre il modale per gestire il ritardo di una macchina.
+ * @param {string|number} id - ID della macchina.
+ * @param {string} name - Nome della macchina (opzionale).
+ * @param {number} currentDelay - Ritardo attuale in minuti.
+ */
 function openDelayModal(id, name, currentDelay) {
   document.getElementById("delayMachineId").value = id;
   document.getElementById("delayInput").value = currentDelay;
@@ -201,12 +265,21 @@ function closeDelayModal() {
   document.getElementById("delayModal").classList.remove("open");
 }
 
+/**
+ * Incrementa o decrementa il valore dell'input ritardo.
+ * @param {number} delta - Valore da aggiungere (es. +5 o -5).
+ */
 function adjustDelay(delta) {
   const input = document.getElementById("delayInput");
+  // ParseInt sicuro con fallback a 0
   let val = parseInt(input.value) || 0;
+  // Impedisce valori negativi
   input.value = Math.max(0, val + delta);
 }
 
+/**
+ * Salva il ritardo chiamando l'API backend.
+ */
 async function saveDelay() {
   const id = document.getElementById("delayMachineId").value;
   const minutes = document.getElementById("delayInput").value;
@@ -214,6 +287,7 @@ async function saveDelay() {
     '#delayModal button[onclick="saveDelay()"]'
   );
 
+  // UI Feedback: disabilita bottone durante il salvataggio
   const originalText = btn.innerText;
   btn.innerText = "...";
   btn.disabled = true;
@@ -229,6 +303,7 @@ async function saveDelay() {
     if (result.success) {
       closeDelayModal();
       const urlParams = new URLSearchParams(window.location.search);
+      // Refresh immediato per mostrare il badge ritardo aggiornato
       fetchPrenotazioni(
         urlParams.get("date") || new Date().toISOString().split("T")[0]
       );
@@ -236,25 +311,41 @@ async function saveDelay() {
       alert(result.message);
     }
   } catch (e) {
-    console.error(e);
+    console.error("Errore Salvataggio Ritardo:", e);
   } finally {
+    // Ripristina stato bottone
     btn.innerText = originalText;
     btn.disabled = false;
   }
 }
 
-// --- CORE UTILS ---
+// --- CORE UTILS & MODAL ---
 
+/**
+ * Gestisce la chiusura "intelligente" del modale di prenotazione.
+ * Se c'è un lock attivo e non è stato confermato, lo sblocca via API.
+ */
 function handleCloseModal() {
+  // 1. Pulisce sempre il timer del modale
+  if (modalTimerInterval) {
+    clearInterval(modalTimerInterval);
+    modalTimerInterval = null;
+  }
+
   const modal = document.getElementById("bookingModal");
   if (!modal.classList.contains("open")) return;
 
+  // Se stiamo chiudendo un modale con un lock attivo (es. utente clicca "Annulla" o overlay)
+  // E il bottone conferma non è disabilitato (quindi non stiamo già inviando i dati)
   if (currentLockId && !document.querySelector(".btn-confirm")?.disabled) {
+    // Chiamata "Fire and forget" per sbloccare
     fetch(BASE_URL + "/api/unlock", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `lock_id=${currentLockId}`,
     });
+
+    // Reset visivo immediato
     if (
       currentSlotElement &&
       currentSlotElement.classList.contains("pending")
@@ -262,50 +353,169 @@ function handleCloseModal() {
       updateSlotVisual(currentSlotElement, "free", t("status_free"));
     }
   }
+
   currentLockId = null;
   modal.classList.remove("open");
 }
 
+/**
+ * Chiude il modale senza logica aggiuntiva (solo UI).
+ * Usato dopo che un'operazione è stata completata con successo o fallita definitivamente.
+ */
 function closeModalRaw() {
+  if (modalTimerInterval) {
+    clearInterval(modalTimerInterval);
+    modalTimerInterval = null;
+  }
   document.getElementById("bookingModal").classList.remove("open");
 }
 
-function openModal(title, body, type, callback) {
+/**
+ * Apre un modale generico con titolo, corpo, tipo e callback opzionale.
+ * * @param {string} title - Titolo del modale.
+ * @param {string} body - Contenuto HTML del corpo.
+ * @param {string} type - 'info', 'danger', 'confirm'.
+ * @param {function} callback - Funzione da eseguire alla conferma.
+ * @param {number} duration - Durata opzionale del timer in secondi.
+ */
+function openModal(title, body, type, callback, duration = 0) {
+  // 1. Pulizia preventiva timer
+  if (modalTimerInterval) clearInterval(modalTimerInterval);
+
   document.getElementById("modalTitle").innerText = title;
-  document.getElementById("modalBody").innerHTML = body;
+  const bodyEl = document.getElementById("modalBody");
+  bodyEl.innerHTML = body;
+
+  // 2. Setup Timer (se duration > 0)
+  if (duration > 0) {
+    // Aggiungiamo un contenitore specifico con ID per poterlo rimpiazzare facilmente
+    const timerHtml = `
+            <div id="timerContainer" class="mt-4 pt-4 border-t border-zinc-700 text-center transition-all duration-300">
+                <p class="text-xs text-gray-400 mb-1 uppercase tracking-wider">Tempo rimanente</p>
+                <span id="modalTimerDisplay" class="font-mono text-2xl font-bold text-white"></span>
+            </div>
+        `;
+    bodyEl.insertAdjacentHTML("beforeend", timerHtml);
+
+    const timerDisplay = document.getElementById("modalTimerDisplay");
+    let timeLeft = duration;
+
+    const updateTimer = () => {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      const formattedTime = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+
+      if (timerDisplay) {
+        timerDisplay.innerText = formattedTime;
+        // Effetto visivo urgenza (< 15s) - Rosso pulsante
+        if (timeLeft < 15) {
+          timerDisplay.classList.remove("text-white");
+          timerDisplay.classList.add("text-red-500", "animate-pulse");
+        }
+      }
+
+      // --- TEMPO SCADUTO ---
+      if (timeLeft <= 0) {
+        clearInterval(modalTimerInterval);
+        modalTimerInterval = null;
+
+        // A. Rimuoviamo il bottone "Conferma" perché il lock è perso
+        const btnConfirm = document.querySelector(".btn-confirm");
+        if (btnConfirm) btnConfirm.remove();
+
+        // B. Modifichiamo il testo del bottone "Annulla" in "Chiudi"
+        const btnCancel = document.querySelector("#modalActions button");
+        if (btnCancel) {
+          btnCancel.innerText = t("btn_close") || "Chiudi";
+          btnCancel.classList.remove("bg-zinc-700");
+          btnCancel.classList.add(
+            "bg-red-900/50",
+            "text-red-200",
+            "border",
+            "border-red-800"
+          );
+        }
+
+        // C. Sostituiamo il Timer con il messaggio di errore elegante
+        const container = document.getElementById("timerContainer");
+        if (container) {
+          container.innerHTML = `
+                        <div class="p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm font-bold flex items-center justify-center gap-2 animate-in fade-in zoom-in duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                            </svg>
+                            ${t("msg_timeout")}
+                        </div>
+                    `;
+        }
+
+        // D. Rilasciamo il lock visivamente nella griglia (refresh dati)
+        currentLockId = null; // Annulliamo il riferimento locale
+        const urlParams = new URLSearchParams(window.location.search);
+        fetchPrenotazioni(
+          urlParams.get("date") || new Date().toISOString().split("T")[0]
+        );
+      }
+      timeLeft--;
+    };
+
+    // Avvio immediato
+    updateTimer();
+    modalTimerInterval = setInterval(updateTimer, 1000);
+  }
+
+  // 3. Costruzione Bottoni Azione
   const actions = document.getElementById("modalActions");
   actions.innerHTML = "";
 
+  // Bottone Annulla (che diventerà "Chiudi" al timeout)
   const btnCancel = document.createElement("button");
   btnCancel.className =
     "flex-1 px-4 py-2 rounded bg-zinc-700 text-white font-medium hover:bg-zinc-600 transition-colors";
   btnCancel.innerText = type === "info" ? t("btn_close") : t("btn_cancel");
-  btnCancel.onclick = handleCloseModal;
+  btnCancel.onclick = () => {
+    handleCloseModal();
+  };
   actions.appendChild(btnCancel);
 
+  // Bottone Conferma
   if (type !== "info" && callback) {
     const btnOk = document.createElement("button");
     const colorClass =
       type === "danger"
         ? "bg-red-600 hover:bg-red-500 shadow-red-900/20"
         : "bg-accent hover:bg-blue-600 shadow-blue-900/20";
+
     btnOk.className = `flex-1 px-4 py-2 rounded font-bold text-white transition-colors shadow-lg btn-confirm ${colorClass}`;
     btnOk.innerText = type === "danger" ? t("btn_delete") : t("btn_confirm");
-    btnOk.onclick = callback;
+
+    btnOk.onclick = () => {
+      if (modalTimerInterval) clearInterval(modalTimerInterval);
+      callback();
+    };
     actions.appendChild(btnOk);
   }
+
   document.getElementById("bookingModal").classList.add("open");
 }
 
+/**
+ * Recupera lo stato delle prenotazioni dal server e aggiorna il DOM.
+ * @param {string} date - Data in formato YYYY-MM-DD.
+ */
 async function fetchPrenotazioni(date) {
   try {
+    // Aggiunge timestamp per evitare caching aggressivo del browser
     const response = await fetch(
       `${BASE_URL}/api/read?date=${date}&t=${new Date().getTime()}`
     );
     const data = await response.json();
+
     if (!data.success) return;
 
-    // 1. Aggiorna Slot
+    // --- 1. Aggiornamento Griglia Slot ---
+
+    // Creiamo una mappa per accesso O(1) invece di cercare nell'array ogni volta
     const dataMap = {};
     data.prenotazioni.forEach((p) => {
       const hourInt = parseInt(p.ora_inizio.split(":")[0]);
@@ -315,10 +525,15 @@ async function fetchPrenotazioni(date) {
 
     document.querySelectorAll(".slot").forEach((slotEl) => {
       const p = dataMap[slotEl.id];
+
+      // Default: Slot Libero
       let targetClass = "free";
       let targetText = t("status_free");
+      let username = null;
+      let newId = "";
 
       if (p) {
+        newId = p.idprenotazione;
         if (p.is_mine) {
           targetClass = p.stato === "in_attesa" ? "pending" : "mine";
           targetText =
@@ -329,33 +544,52 @@ async function fetchPrenotazioni(date) {
             p.stato === "in_attesa"
               ? t("status_pending")
               : p.username || t("status_taken");
+          username = p.username;
         }
       }
 
+      // Ottimizzazione DOM: Aggiorna classi solo se cambiano
       if (!slotEl.classList.contains(targetClass)) {
         slotEl.classList.remove("free", "taken", "mine", "pending");
         slotEl.classList.add(targetClass);
       }
+
+      // Aggiorna testo stato
       const span = slotEl.querySelector(".status-text");
       if (span && span.innerText !== targetText) span.innerText = targetText;
 
-      const newId = p ? p.idprenotazione : "";
+      // Aggiorna dataset (ID prenotazione e Username)
       if (slotEl.dataset.idprenotazione != newId) {
         if (newId) slotEl.dataset.idprenotazione = newId;
         else delete slotEl.dataset.idprenotazione;
       }
-      if (p && p.username) slotEl.dataset.username = p.username;
+
+      if (username) slotEl.dataset.username = username;
+      else delete slotEl.dataset.username;
     });
 
-    // 2. Aggiorna Ritardi (FIX CLASSI CSS)
+    // --- 2. Aggiornamento Ritardi ---
+
+    // Definiamo le classi CSS una volta sola per pulizia codice
+    const CSS_DELAY_ACTIVE = [
+      "bg-yellow-500/10",
+      "text-yellow-400",
+      "border-yellow-500/30",
+      "animate-pulse",
+    ];
+    const CSS_DELAY_INACTIVE = [
+      "bg-zinc-900/80",
+      "text-zinc-500",
+      "border-zinc-700",
+      "hover:text-gray-300",
+      "hover:border-zinc-500",
+    ];
+
     if (data.macchine) {
       data.macchine.forEach((macchina) => {
-        const btn = document.querySelector(
-          `#machine-header-${macchina.idmacchina} .machine-delay-btn`
-        );
-        const span = document.querySelector(
-          `#machine-header-${macchina.idmacchina} .delay-val`
-        );
+        const headerId = `#machine-header-${macchina.idmacchina}`;
+        const btn = document.querySelector(`${headerId} .machine-delay-btn`);
+        const span = document.querySelector(`${headerId} .delay-val`);
 
         if (btn && span) {
           const rit = parseInt(macchina.ritardo);
@@ -364,40 +598,30 @@ async function fetchPrenotazioni(date) {
 
           if (span.innerText !== txt) span.innerText = txt;
 
-          // Definiamo le classi ESATTE usate in dashboard.php
-          const yellowClasses = [
-            "bg-yellow-500/10",
-            "text-yellow-400",
-            "border-yellow-500/30",
-            "animate-pulse",
-          ];
-          const grayClasses = [
-            "bg-zinc-900/80",
-            "text-zinc-500",
-            "border-zinc-700",
-            "hover:text-gray-300",
-            "hover:border-zinc-500",
-          ];
-
           if (rit > 0) {
-            // Attiva Giallo, Rimuovi Grigio
-            btn.classList.add(...yellowClasses);
-            btn.classList.remove(...grayClasses);
+            btn.classList.add(...CSS_DELAY_ACTIVE);
+            btn.classList.remove(...CSS_DELAY_INACTIVE);
           } else {
-            // Attiva Grigio, Rimuovi Giallo
-            btn.classList.remove(...yellowClasses);
-            btn.classList.add(...grayClasses);
+            btn.classList.remove(...CSS_DELAY_ACTIVE);
+            btn.classList.add(...CSS_DELAY_INACTIVE);
           }
 
+          // Riattacca il listener con il nuovo valore di ritardo
           btn.onclick = () => openDelayModal(macchina.idmacchina, "", rit);
         }
       });
     }
   } catch (e) {
-    console.error(e);
+    console.error("Errore fetch aggiornamento:", e);
   }
 }
 
+/**
+ * Aggiorna visivamente un singolo slot senza ricaricare tutto.
+ * @param {HTMLElement} el - Elemento DOM.
+ * @param {string} className - Classe da applicare (free, mine, taken, pending).
+ * @param {string} text - Testo da mostrare.
+ */
 function updateSlotVisual(el, className, text) {
   el.classList.remove("free", "taken", "mine", "pending");
   el.classList.add(className);

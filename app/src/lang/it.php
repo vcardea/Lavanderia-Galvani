@@ -7,6 +7,7 @@ return [
     'nav_login' => 'Accedi',
     'nav_register' => 'Registrati',
     'nav_brand' => 'Lavanderia',
+    'logged_in_as' => 'Loggato come',
 
     // --- GIORNI DELLA SETTIMANA ---
     'day_0' => 'Dom',
@@ -30,6 +31,10 @@ return [
     'admin_subtitle' => 'Admin Area',
     'admin_sect_settings' => 'Impostazioni Generali',
     'lbl_max_hours' => 'Max Ore Settimanali per Utente',
+    'note_max_hours' => 'Ore max prenotabili a settimana per utente.',
+    'lbl_registration_code' => 'Codice Segreto Registrazione',
+    'note_registration_code' => 'Il codice che gli studenti devono inserire per registrarsi.',
+    'err_invalid_registration_code' => 'Il Codice Residenza è errato. Lo trovi appeso in lavanderia.',
     'btn_save' => 'Salva Modifiche',
     'note_immediate_effect' => '*Questa modifica ha effetto immediato su tutte le nuove prenotazioni.',
     'delete_user' => 'Elimina',
@@ -77,6 +82,7 @@ return [
     'link_create_account' => 'Crea account',
     'error_creds' => 'Credenziali non valide.',
     'register_title' => 'Crea Account',
+    'residence_code_info' => 'Il codice è appeso sulla bacheca della lavanderia.',
     'btn_register' => 'Registrati',
     'link_have_account' => 'Hai già un account?',
     'link_login_here' => 'Accedi qui',
@@ -139,6 +145,8 @@ return [
     'msg_error' => 'Errore',
     'err_network' => 'Errore di Rete',
     'err_server' => 'Errore Server',
+    'remaining_time' => 'Tempo Rimanente',
+    'msg_timeout' => 'Prenotazione scaduta! Riprova.',
 
     // --- PAGINA PRIVACY ---
     'priv_title' => 'Privacy & Gestione Dati',

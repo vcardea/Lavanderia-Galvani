@@ -1,11 +1,18 @@
 <?php
 class Database
 {
-    private $host = "localhost";
-    private $db_name = "lavanderia";
-    private $username = "root";
-    private $password = "";
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
     public $conn;
+
+    function __construct() {
+        $this->host = $_ENV["DB_HOST"];
+        $this->db_name = $_ENV["DB_NAME"];
+        $this->username = $_ENV["DB_USER"];
+        $this->password = $_ENV["DB_PASS"];
+    }
 
     public function getConnection()
     {

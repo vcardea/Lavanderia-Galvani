@@ -7,6 +7,7 @@ return [
     'nav_login' => 'Log in',
     'nav_register' => 'Register',
     'nav_brand' => 'Laundry',
+    'logged_in_as' => 'Logged in as',
 
     // --- DAYS OF WEEK ---
     'day_0' => 'Sun',
@@ -30,6 +31,10 @@ return [
     'admin_subtitle' => 'Admin Area',
     'admin_sect_settings' => 'General Settings',
     'lbl_max_hours' => 'Max Weekly Hours per User',
+    'note_max_hours' => 'Max bookable hours per week per user.',
+    'lbl_registration_code' => 'Registration Secret Code',
+    'note_registration_code' => 'The code students must enter to register.',
+    'err_invalid_registration_code' => 'The Residence Code is incorrect. You can find it posted in the laundry room.',
     'btn_save' => 'Save Changes',
     'note_immediate_effect' => '*This change affects all new bookings immediately.',
     'delete_user' => 'Delete',
@@ -78,6 +83,7 @@ return [
     'error_creds' => 'Invalid credentials.',
     'register_title' => 'Create Account',
     'btn_register' => 'Sign Up',
+    'residence_code_info' => 'The code is posted on the laundry notice board.',
     'link_have_account' => 'Already have an account?',
     'link_login_here' => 'Log in here',
     'lbl_username_gen' => 'Username (Generated)',
@@ -138,6 +144,8 @@ return [
     'msg_error' => 'Error',
     'err_network' => 'Network Error',
     'err_server' => 'Server Error',
+    'remaining_time' => 'Remaining Time',
+    'msg_timeout' => 'Booking timed out! Please try again.',
 
     // --- PRIVACY PAGE ---
     'priv_title' => 'Privacy & Data Management',

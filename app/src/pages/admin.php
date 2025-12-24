@@ -9,18 +9,39 @@ $msgType = 'success';
 
 // --- GESTIONE AZIONI POST ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // 1. Aggiornamento Configurazioni (Ore + Codice)
     if (isset($_POST['action']) && $_POST['action'] === 'update_config') {
+
+        $errors = [];
+
+        // Gestione Ore Settimanali
         $newLimit = (int)$_POST['max_hours'];
         if ($newLimit > 0) {
             $stmt = $db->prepare("UPDATE configurazioni SET valore = ? WHERE chiave = 'max_hours_weekly'");
             $stmt->execute([$newLimit]);
-            $msg = sprintf(__('msg_config_updated'), $newLimit);
         } else {
-            $msg = __('msg_invalid_num');
+            $errors[] = __('msg_invalid_num');
+        }
+
+        // Gestione Codice Registrazione (Upsert: Inserisci o Aggiorna)
+        $newCode = trim($_POST['registration_code'] ?? '');
+        if (!empty($newCode)) {
+            // Usa INSERT ... ON DUPLICATE KEY UPDATE per gestire sia il primo inserimento che gli aggiornamenti
+            $stmt = $db->prepare("INSERT INTO configurazioni (chiave, valore) VALUES ('registration_code', ?) ON DUPLICATE KEY UPDATE valore = ?");
+            $stmt->execute([$newCode, $newCode]);
+        } else {
+            $errors[] = "Il codice di registrazione non può essere vuoto.";
+        }
+
+        if (empty($errors)) {
+            $msg = "Configurazioni aggiornate con successo!";
+        } else {
+            $msg = implode("<br>", $errors);
             $msgType = 'error';
         }
-    }
-    elseif (isset($_POST['action']) && $_POST['action'] === 'toggle_machine') {
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'toggle_machine') {
+        // ... (Codice invariato)
         $idMacchina = $_POST['id_macchina'];
         $currentStatus = $_POST['current_status'];
         $newStatus = ($currentStatus === 'attiva') ? 'manutenzione' : 'attiva';
@@ -28,42 +49,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$newStatus, $idMacchina]);
         $statusLabel = ($newStatus === 'attiva') ? __('st_active') : __('st_maint');
         $msg = sprintf(__('msg_machine_updated'), strtoupper($statusLabel));
-    }
-    elseif (isset($_POST['action']) && $_POST['action'] === 'reset_password') {
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'reset_password') {
+        // ... (Codice invariato)
         $userId = $_POST['user_id'];
         $newPass = bin2hex(random_bytes(4));
         $newHash = password_hash($newPass, PASSWORD_BCRYPT);
         $stmt = $db->prepare("UPDATE utenti SET password_hash = ? WHERE idutente = ?");
         $stmt->execute([$newHash, $userId]);
         $msg = __('msg_pass_reset') . " <strong class='font-mono bg-black px-2 py-1 rounded text-accent'>" . htmlspecialchars($newPass) . "</strong>";
-    }
-    elseif (isset($_POST['action']) && $_POST['action'] === 'delete_user') {
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_user') {
+        // ... (Codice invariato)
         $userId = $_POST['user_id'];
         $anonimo = "Utente Cancellato";
         $dummyEmail = "deleted_$userId@anon.imo";
         $dummyPass = "LOCKED";
         $stmt = $db->prepare("UPDATE utenti SET nome = ?, email = ?, username = ?, password_hash = ?, numero_appartamento = '' WHERE idutente = ?");
         $stmt->execute([$anonimo, $dummyEmail, $anonimo, $dummyPass, $userId]);
-
-        // Cancella prenotazioni future
         $stmtDelRes = $db->prepare("DELETE FROM prenotazioni WHERE idutente = ? AND data_prenotazione >= CURRENT_DATE");
         $stmtDelRes->execute([$userId]);
         $msg = __('msg_user_deleted');
     }
 }
 
-// --- RECUPERO DATI (Con gestione errori) ---
+// --- RECUPERO DATI ---
 try {
-    // Config
-    $stmtConf = $db->prepare("SELECT valore FROM configurazioni WHERE chiave = 'max_hours_weekly'");
-    $stmtConf->execute();
-    $currentLimit = $stmtConf->fetchColumn() ?: 3;
+    // Config: Recuperiamo TUTTE le configurazioni come array chiave-valore
+    // Risultato atteso: ['max_hours_weekly' => '3', 'registration_code' => 'GALVANI2025']
+    $stmtConf = $db->query("SELECT chiave, valore FROM configurazioni");
+    $config = $stmtConf->fetchAll(PDO::FETCH_KEY_PAIR);
+
+    // Valori di default se mancano nel DB
+    $currentLimit = $config['max_hours_weekly'] ?? 3;
+    $currentCode = $config['registration_code'] ?? 'GALVANI2025';
 
     // Macchine
     $stmtMacchine = $db->query("SELECT * FROM macchine");
     $macchine = $stmtMacchine->fetchAll();
 
-    // Utenti (Escludendo se stessi)
+    // Utenti
     $stmtList = $db->prepare("SELECT * FROM utenti WHERE idutente != ? ORDER BY data_registrazione DESC");
     $stmtList->execute([$_SESSION['user_id']]);
     $utenti = $stmtList->fetchAll();
@@ -82,7 +105,7 @@ require SRC_PATH . '/templates/header.php';
     </div>
 
     <?php if ($msg): ?>
-        <div class="<?= ($msgType === 'success') ? 'bg-green-900/30 border-green-800 text-green-300' : 'bg-red-900/30 border-red-800 text-red-300' ?> border p-4 rounded-lg flex items-center shadow-lg text-sm">
+        <div class="<?= ($msgType === 'success') ? 'bg-green-900/30 border-green-800 text-green-300' : 'bg-red-900/30 border-red-800 text-red-300' ?> border p-4 rounded-lg flex items-center shadow-lg text-sm mb-6">
             <span class="text-2xl mr-3"><?= ($msgType === 'success') ? '✅' : '⚠️' ?></span>
             <div><?= $msg ?></div>
         </div>
@@ -93,20 +116,34 @@ require SRC_PATH . '/templates/header.php';
             <h3 class="font-bold text-gray-200 flex items-center gap-2">⚙️ <?= __('admin_sect_settings') ?></h3>
         </div>
         <div class="p-6">
-            <form method="POST" class="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+            <form method="POST" id="settingsForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                 <input type="hidden" name="action" value="update_config">
-                <div class="w-full sm:w-auto sm:flex-1 max-w-xs">
+
+                <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-2"><?= __('lbl_max_hours') ?></label>
-                    <input type="number" name="max_hours" value="<?= $currentLimit ?>" min="1" max="20"
+                    <input type="number" name="max_hours" value="<?= htmlspecialchars($currentLimit) ?>" min="1" max="20"
                         class="w-full bg-zinc-900 border border-zinc-700 rounded p-3 text-white focus:border-accent focus:ring-1 focus:ring-accent font-bold text-lg">
+                    <p class="text-xs text-gray-600 mt-1"><?= __('note_max_hours') ?></p>
                 </div>
-                <button type="submit" class="w-full sm:w-auto bg-accent hover:bg-blue-600 text-white font-bold py-3 px-6 rounded transition-colors shadow-lg shadow-blue-900/20">
-                    <?= __('btn_save') ?>
-                </button>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2"><?= __('lbl_registration_code') ?></label>
+                    <div class="relative">
+                        <input type="text" name="registration_code" value="<?= htmlspecialchars($currentCode) ?>"
+                            class="w-full bg-zinc-900 border border-zinc-700 rounded p-3 text-white focus:border-accent focus:ring-1 focus:ring-accent font-mono tracking-wider">
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1"><?= __('note_registration_code') ?></p>
+                </div>
+
+                <div class="md:col-span-2">
+                    <button type="submit" class="w-full bg-accent hover:bg-blue-600 text-white font-bold py-3 px-6 rounded transition-colors shadow-lg shadow-blue-900/20 flex justify-center items-center gap-2">
+                        <?= __('btn_save') ?>
+                    </button>
+                    <p class="text-xs text-gray-500 mt-3 text-center">
+                        <?= __('note_immediate_effect') ?>
+                    </p>
+                </div>
             </form>
-            <p class="text-xs text-gray-500 mt-3">
-                <?= __('note_immediate_effect') ?>
-            </p>
         </div>
     </section>
 
@@ -114,7 +151,6 @@ require SRC_PATH . '/templates/header.php';
         <div class="p-4 bg-zinc-800/50 border-b border-zinc-700">
             <h3 class="font-bold text-gray-200 flex items-center gap-2">🧺 <?= __('admin_sect_machines') ?></h3>
         </div>
-
         <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left text-sm text-gray-400">
                 <thead class="bg-zinc-800/30 uppercase text-xs">
@@ -156,7 +192,6 @@ require SRC_PATH . '/templates/header.php';
                 </tbody>
             </table>
         </div>
-
         <div class="md:hidden p-4 space-y-4">
             <?php foreach ($macchine as $m): ?>
                 <div class="bg-zinc-900/50 border border-zinc-700 rounded-lg p-4 flex flex-col gap-3">
@@ -200,9 +235,7 @@ require SRC_PATH . '/templates/header.php';
                 <tbody class="divide-y divide-zinc-800">
                     <?php if (empty($utenti)): ?>
                         <tr>
-                            <td colspan="4" class="p-6 text-center text-gray-500 italic">
-                                <?= __('no_other_users') ?>
-                            </td>
+                            <td colspan="4" class="p-6 text-center text-gray-500 italic"><?= __('no_other_users') ?></td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($utenti as $u): ?>
@@ -216,12 +249,12 @@ require SRC_PATH . '/templates/header.php';
                                         <form id="form_reset_<?= $u['idutente'] ?>" method="POST">
                                             <input type="hidden" name="action" value="reset_password">
                                             <input type="hidden" name="user_id" value="<?= $u['idutente'] ?>">
-                                            <button type="button" onclick="confirmAdminAction('form_reset_<?= $u['idutente'] ?>', 'reset', '<?= htmlspecialchars($u['username'] ?? 'User') ?>')" class="text-yellow-500 hover:text-yellow-100 bg-yellow-900/20 hover:bg-yellow-700 p-2 rounded transition-colors" title="<?= __('reset_user_pwd') ?>">🔑</button>
+                                            <button type="button" onclick="confirmAdminAction('form_reset_<?= $u['idutente'] ?>', 'reset', '<?= htmlspecialchars($u['username'] ?? 'User') ?>')" class="text-yellow-500 hover:text-yellow-100 bg-yellow-900/20 hover:bg-yellow-700 p-2 rounded transition-colors">🔑</button>
                                         </form>
                                         <form id="form_delete_<?= $u['idutente'] ?>" method="POST">
                                             <input type="hidden" name="action" value="delete_user">
                                             <input type="hidden" name="user_id" value="<?= $u['idutente'] ?>">
-                                            <button type="button" onclick="confirmAdminAction('form_delete_<?= $u['idutente'] ?>', 'delete', '<?= htmlspecialchars($u['username'] ?? 'User') ?>')" class="text-red-500 hover:text-red-100 bg-red-900/20 hover:bg-red-700 p-2 rounded transition-colors" title="<?= __('delete_user') ?>">🗑️</button>
+                                            <button type="button" onclick="confirmAdminAction('form_delete_<?= $u['idutente'] ?>', 'delete', '<?= htmlspecialchars($u['username'] ?? 'User') ?>')" class="text-red-500 hover:text-red-100 bg-red-900/20 hover:bg-red-700 p-2 rounded transition-colors">🗑️</button>
                                         </form>
                                     </div>
                                 </td>
@@ -231,12 +264,9 @@ require SRC_PATH . '/templates/header.php';
                 </tbody>
             </table>
         </div>
-
         <div class="md:hidden p-4 space-y-4">
             <?php if (empty($utenti)): ?>
-                <div class="text-center text-gray-500 italic p-4">
-                    <?= __('no_other_users') ?>
-                </div>
+                <div class="text-center text-gray-500 italic p-4"><?= __('no_other_users') ?></div>
             <?php else: ?>
                 <?php foreach ($utenti as $u): ?>
                     <?php if (($u['username'] ?? '') === 'Utente Cancellato') continue; ?>
@@ -247,10 +277,7 @@ require SRC_PATH . '/templates/header.php';
                                 <span class="text-xs text-zinc-500">Apt: <strong class="text-gray-300"><?= htmlspecialchars($u['numero_appartamento'] ?? '-') ?></strong></span>
                             </div>
                         </div>
-                        <div class="text-xs text-gray-400 mb-4 bg-black/20 p-2 rounded break-all">
-                            <?= htmlspecialchars($u['email'] ?? 'No Email') ?>
-                        </div>
-
+                        <div class="text-xs text-gray-400 mb-4 bg-black/20 p-2 rounded break-all"><?= htmlspecialchars($u['email'] ?? 'No Email') ?></div>
                         <div class="grid grid-cols-2 gap-3">
                             <form id="m_form_reset_<?= $u['idutente'] ?>" method="POST">
                                 <input type="hidden" name="action" value="reset_password">
@@ -280,6 +307,7 @@ require SRC_PATH . '/templates/header.php';
 </div>
 
 <script>
+    // --- Testi per il modale (traduzioni) ---
     const txt_reset_title = "<?= __('modal_reset_title') ?>";
     const txt_reset_body_tpl = "<?= __('modal_reset_body') ?>";
     const txt_btn_reset = "<?= __('btn_reset_confirm') ?>";
@@ -288,6 +316,7 @@ require SRC_PATH . '/templates/header.php';
     const txt_btn_del = "<?= __('btn_delete_confirm') ?>";
     const txt_cancel = "<?= __('btn_cancel') ?>";
 
+    // --- Funzione per Modale di Conferma ---
     function confirmAdminAction(formId, actionType, username) {
         let title, body, btnClass, btnText;
         if (actionType === 'reset') {
@@ -327,6 +356,9 @@ require SRC_PATH . '/templates/header.php';
     document.getElementById('bookingModal').addEventListener('click', (e) => {
         if (e.target.classList.contains('modal-overlay')) document.getElementById('bookingModal').classList.remove('open');
     });
+
+    // NOTA: Ho rimosso l'event listener sul form settingsForm perché ora
+    // l'invio è gestito direttamente dal PHP in cima alla pagina tramite il submit standard.
 </script>
 
 <?php require SRC_PATH . '/templates/footer.php'; ?>

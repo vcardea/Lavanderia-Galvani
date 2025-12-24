@@ -10,14 +10,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $database = new Database();
     $db = $database->getConnection();
 
+    $userCode = trim($_POST['residence_code'] ?? '');
+
+    $stmt = $db->prepare("SELECT valore FROM configurazioni WHERE chiave = 'registration_key'");
+    $stmt->execute();
+    $correctCode = $stmt->fetchColumn();
+
+    
     $email_input = trim($_POST['email'] ?? '');
     $apt_input = trim($_POST['appartamento'] ?? '');
     $password = $_POST['password'] ?? '';
     $password_confirm = $_POST['password_confirm'] ?? '';
     $username_input = trim($_POST['username'] ?? '');
-
+    
     // VALIDAZIONE CON TRADUZIONI
-    if ($apt_input < 1 || $apt_input > 23) {
+    if (!empty($correctCode) && $userCode !== $correctCode) {
+        $error = __('err_invalid_registration_code');
+    } elseif ($apt_input < 1 || $apt_input > 23) {
         $error = __('err_apt_range');
     } elseif (!preg_match('/^[a-zA-Z0-9.]+@(studio\.unibo\.it|unibo\.it)$/', $email_input)) {
         $error = __('err_email_domain');
@@ -135,6 +144,25 @@ require SRC_PATH . '/templates/header.php';
                 </div>
                 <p id="matchError" class="text-xs text-red-400 mt-1 hidden">⚠ Le password non coincidono</p>
                 <p id="matchSuccess" class="text-xs text-green-500 mt-1 hidden">✓ Le password coincidono</p>
+            </div>
+            <div class="mt-4">
+                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase" for="residence_code">
+                    Codice Residenza
+                </label>
+                <div class="relative">
+                    <input
+                        type="text"
+                        name="residence_code"
+                        id="residence_code"
+                        required
+                        class="w-full bg-zinc-800 border border-zinc-700 rounded p-3 text-white placeholder-gray-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1"><?= __('residence_code_info') ?></p>
             </div>
             <button type="submit" id="submitBtn" class="w-full bg-accent hover:bg-blue-600 text-white font-bold py-3 rounded transition-colors shadow-lg shadow-blue-900/20">
                 <?= __('btn_register') ?>
