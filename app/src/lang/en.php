@@ -153,8 +153,8 @@ return [
     'priv_ref_gdpr' => 'Ref. GDPR (EU 2016/679)',
 
     // Section 1
-    'priv_s1_title' => '1. What data we collect',
-    'priv_s1_desc' => 'We collect only strictly necessary information (Minimization Principle) to ensure service operation.',
+    'priv_s1_title' => '1. What data is collected',
+    'priv_s1_desc' => 'Only strictly necessary information is collected (Minimization Principle) to ensure service operation.',
     'priv_data_email' => 'Institutional Email',
     'priv_data_email_desc' => 'To uniquely identify you as an authorized student.',
     'priv_data_apt' => 'Apartment Number',
@@ -166,16 +166,16 @@ return [
 
     // Section 2
     'priv_s2_title' => '2. Purpose of processing',
-    'priv_s2_intro' => 'Your data is used exclusively to:',
+    'priv_s2_intro' => 'Personal data is used exclusively to:',
     'priv_use_1' => 'Manage secure access (Login).',
     'priv_use_2' => 'Organize the calendar and avoid conflicts between tenants.',
     'priv_use_3' => 'Ensure compliance with common rules.',
     'priv_note_vis_title' => 'Note on visibility:',
-    'priv_note_vis_desc' => 'Your data is not sold to third parties. However, your <em>Username</em> will be visible to other students on the booking calendar to allow internal organization (e.g., shift swaps).',
+    'priv_note_vis_desc' => 'Data is not sold to third parties. However, the <em>Username</em> will be visible to other students on the booking calendar to allow internal organization (e.g., shift swaps).',
 
     // Section 3
     'priv_s3_title' => '3. Cancellation and Right to be Forgotten',
-    'priv_s3_desc' => 'You can request account deletion at any time (Art. 17 GDPR). When an account is deleted, we apply an <strong>Anonymization</strong> procedure.',
+    'priv_s3_desc' => 'Account deletion can be requested at any time (Art. 17 GDPR). When an account is deleted, an <strong>Anonymization</strong> procedure is applied.',
     'priv_del_title' => 'Deleted Data',
     'priv_del_1' => 'Email and Password',
     'priv_del_2' => 'Association with apartment number',
@@ -195,8 +195,8 @@ return [
 
     // Section 5
     'priv_s5_title' => '5. Cookie Policy',
-    'priv_s5_desc' => 'We use exclusively <strong>Technical Cookies</strong> (Session ID) necessary to keep access active while browsing. We do not track, profile for advertising, or use invasive third-party analytics.',
-
+    'priv_s5_desc' => 'Exclusively <strong>Technical Cookies</strong> (Session ID) are used to keep access active while browsing. No tracking, advertising profiling, or invasive third-party analytics are performed.',
+    
     // Delay Reporting
     'lbl_delay' => 'Delay',
     'lbl_delay_min' => 'min',

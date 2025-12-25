@@ -154,8 +154,8 @@ return [
     'priv_ref_gdpr' => 'Rif. GDPR (UE 2016/679)',
 
     // Sezione 1
-    'priv_s1_title' => '1. Quali dati raccogliamo',
-    'priv_s1_desc' => 'Raccogliamo solo le informazioni strettamente necessarie (Principio di Minimizzazione) per garantire il funzionamento del servizio.',
+    'priv_s1_title' => '1. Quali dati vengono raccolti',
+    'priv_s1_desc' => 'Vengono raccolte solo le informazioni strettamente necessarie (Principio di Minimizzazione) per garantire il funzionamento del servizio.',
     'priv_data_email' => 'Email Istituzionale',
     'priv_data_email_desc' => 'Per identificarti univocamente come studente autorizzato.',
     'priv_data_apt' => 'Numero Appartamento',
@@ -167,16 +167,16 @@ return [
 
     // Sezione 2
     'priv_s2_title' => '2. Finalità del trattamento',
-    'priv_s2_intro' => 'I tuoi dati servono esclusivamente a:',
+    'priv_s2_intro' => 'I dati personali sono utilizzati esclusivamente per:',
     'priv_use_1' => 'Gestire l\'accesso sicuro (Login).',
     'priv_use_2' => 'Organizzare il calendario ed evitare conflitti tra inquilini.',
     'priv_use_3' => 'Garantire il rispetto delle regole comuni.',
     'priv_note_vis_title' => 'Nota sulla visibilità:',
-    'priv_note_vis_desc' => 'I tuoi dati non vengono ceduti a terzi. Tuttavia, il tuo <em>Username</em> sarà visibile agli altri studenti sul calendario prenotazioni per permettere l\'organizzazione interna (es. scambi turno).',
+    'priv_note_vis_desc' => 'I dati non vengono ceduti a terzi. Tuttavia, lo <em>Username</em> sarà visibile agli altri studenti sul calendario prenotazioni per permettere l\'organizzazione interna (es. scambi turno).',
 
     // Sezione 3
     'priv_s3_title' => '3. Cancellazione e Diritto all\'Oblio',
-    'priv_s3_desc' => 'Puoi richiedere la cancellazione del tuo account in qualsiasi momento (Art. 17 GDPR). Quando un account viene eliminato, applichiamo una procedura di <strong>Anonimizzazione</strong>.',
+    'priv_s3_desc' => 'È possibile richiedere la cancellazione dell\'account in qualsiasi momento (Art. 17 GDPR). Quando un account viene eliminato, viene applicata una procedura di <strong>Anonimizzazione</strong>.',
     'priv_del_title' => 'Dati Eliminati',
     'priv_del_1' => 'Email e Password',
     'priv_del_2' => 'Associazione col numero appartamento',
@@ -196,7 +196,7 @@ return [
 
     // Sezione 5
     'priv_s5_title' => '5. Cookie Policy',
-    'priv_s5_desc' => 'Utilizziamo esclusivamente <strong>Cookie Tecnici</strong> (Session ID) necessari per mantenere l\'accesso attivo mentre navighi. Non effettuiamo tracciamento, profilazione pubblicitaria né usiamo analytics di terze parti invasive.',
+    'priv_s5_desc' => 'Vengono utilizzati esclusivamente <strong>Cookie Tecnici</strong> (Session ID) necessari per mantenere l\'accesso attivo durante la navigazione. Non viene effettuato tracciamento, profilazione pubblicitaria né l\'uso di analytics di terze parti invasive.',
 
     // Segnalazione Ritardo
     'lbl_delay' => 'Ritardo',
