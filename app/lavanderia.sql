@@ -42,7 +42,7 @@ INSERT INTO
   `configurazioni` (`chiave`, `valore`)
 VALUES
   ('max_hours_weekly', '8'),
-  ('registration_key', 'CHIAVE');
+  ('registration_code', 'CHIAVE');
 
 -- --------------------------------------------------------
 --
