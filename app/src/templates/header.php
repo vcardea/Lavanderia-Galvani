@@ -91,9 +91,9 @@
                 <div class="flex items-center gap-4">
 
                     <div class="flex items-center gap-2 text-xs sm:text-sm font-bold bg-black/30 px-3 py-1.5 rounded-md border border-zinc-700 shadow-inner">
-                        <a href="?lang=it" class="transition-colors <?= Lang::current() == 'it' ? 'text-white' : 'text-zinc-500 hover:text-gray-300' ?>">IT</a>
+                        <a href="?lang=it<?= Utils::preserve_date() ?>" class="transition-colors <?= Lang::current() == 'it' ? 'text-white' : 'text-zinc-500 hover:text-gray-300' ?>">IT</a>
                         <span class="text-zinc-600">|</span>
-                        <a href="?lang=en" class="transition-colors <?= Lang::current() == 'en' ? 'text-white' : 'text-zinc-500 hover:text-gray-300' ?>">EN</a>
+                        <a href="?lang=en<?= Utils::preserve_date() ?>" class="transition-colors <?= Lang::current() == 'en' ? 'text-white' : 'text-zinc-500 hover:text-gray-300' ?>">EN</a>
                     </div>
 
                     <?php if (isset($_SESSION['user_id'])): ?>

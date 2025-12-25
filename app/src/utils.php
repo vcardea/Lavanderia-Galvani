@@ -66,8 +66,16 @@ class Utils
     /**
      * Recupera il valore precedente di un campo del modulo...
      */
-    function old($field)
+    static function old($field)
     {
         return isset($_POST[$field]) ? htmlspecialchars($_POST[$field]) : '';
+    }
+
+    /**
+     * Preserva la data selezionata nei link.
+     */
+    static function preserve_date()
+    {
+        return isset($_GET['date']) ? '&date=' . $_GET['date'] : '';
     }
 }

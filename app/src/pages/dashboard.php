@@ -86,6 +86,7 @@ require SRC_PATH . '/templates/header.php';
                     <?= htmlspecialchars(__($macchina['nome'])) ?>
                 </span>
 
+                <?php if (!isset($_GET['date']) || $_GET['date'] === (new DateTime())->format('Y-m-d')): ?>
                 <button onclick="openDelayModal(<?= $macchina['idmacchina'] ?>, '<?= htmlspecialchars(__($macchina['nome'])) ?>', <?= $ritardo ?>)"
                     class="machine-delay-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 active:scale-95 <?= $hasDelay ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30 animate-pulse' : 'bg-zinc-900/80 text-zinc-500 border-zinc-700 hover:text-gray-300 hover:border-zinc-500' ?>">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,6 +96,7 @@ require SRC_PATH . '/templates/header.php';
                         <?= $hasDelay ? "+{$ritardo} " . __('lbl_delay_min') : __('lbl_delay') ?>
                     </span>
                 </button>
+                <?php endif; ?>
             </div>
 
             <div class="divide-y divide-zinc-800/50">
