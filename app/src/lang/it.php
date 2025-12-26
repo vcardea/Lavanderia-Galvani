@@ -218,4 +218,33 @@ return [
     // Messaggi
     'no_other_registered_users' => 'Nessun altro utente registrato.',
     'no_other_users' => 'Nessun altro utente.',
+
+    // --- PAGINE DI ERRORE ---
+    'err_title_generic' => 'Ops! Qualcosa è andato storto.',
+    'err_btn_home' => 'Torna alla Dashboard',
+    'err_btn_back' => 'Indietro',
+
+    // 400 - Bad Request
+    'err_400_title' => 'Richiesta Non Valida (400)',
+    'err_400_desc' => 'Il server non è riuscito a comprendere la richiesta a causa di una sintassi non valida.',
+
+    // 401 - Unauthorized
+    'err_401_title' => 'Non Autorizzato (401)',
+    'err_401_desc' => 'Devi effettuare il login per accedere a questa risorsa.',
+
+    // 403 - Forbidden
+    'err_403_title' => 'Accesso Negato (403)',
+    'err_403_desc' => 'Non hai i permessi necessari per visualizzare questa pagina.',
+
+    // 404 - Not Found
+    'err_404_title' => 'Pagina Non Trovata (404)',
+    'err_404_desc' => 'Sembra che la pagina che stavi cercando non esista o sia stata spostata.',
+
+    // 500 - Internal Server Error
+    'err_500_title' => 'Errore del Server (500)',
+    'err_500_desc' => 'Si è verificato un errore imprevisto lato server. Riprova più tardi.',
+
+    // 503 - Service Unavailable
+    'err_503_title' => 'Servizio Non Disponibile (503)',
+    'err_503_desc' => 'Il sistema è momentaneamente in manutenzione o sovraccarico. Riprova tra poco.',
 ];

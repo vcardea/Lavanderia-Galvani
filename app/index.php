@@ -94,8 +94,14 @@ switch ($path) {
         require SRC_PATH . '/api/delay.php';
         break;
 
+    case 'error':
+        require SRC_PATH . '/pages/error.php';
+        break;
+
+    // Fallback se la pagina non esiste (404 interno)
     default:
-        http_response_code(404);
-        echo htmlspecialchars("404 - Pagina non trovata (Path richiesto: $path)");
+        // Possiamo forzare il codice 404 e caricare la pagina errore
+        $_GET['code'] = 404; 
+        require SRC_PATH . '/pages/error.php';
         break;
 }

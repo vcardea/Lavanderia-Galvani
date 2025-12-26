@@ -391,7 +391,7 @@ function openModal(title, body, type, callback, duration = 0) {
     // Aggiungiamo un contenitore specifico con ID per poterlo rimpiazzare facilmente
     const timerHtml = `
             <div id="timerContainer" class="mt-4 pt-4 border-t border-zinc-700 text-center transition-all duration-300">
-                <p class="text-xs text-gray-400 mb-1 uppercase tracking-wider">Tempo rimanente</p>
+                <p class="text-xs text-gray-400 mb-1 uppercase tracking-wider">${t('remaining_time')}</p>
                 <span id="modalTimerDisplay" class="font-mono text-2xl font-bold text-white"></span>
             </div>
         `;

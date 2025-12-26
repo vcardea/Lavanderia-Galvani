@@ -198,7 +198,7 @@ return [
     // Section 5
     'priv_s5_title' => '5. Cookie Policy',
     'priv_s5_desc' => 'Exclusively <strong>Technical Cookies</strong> (Session ID) are used to keep access active while browsing. No tracking, advertising profiling, or invasive third-party analytics are performed.',
-    
+
     // Delay Reporting
     'lbl_delay' => 'Delay',
     'lbl_delay_min' => 'min',
@@ -217,4 +217,33 @@ return [
     // Messages
     'no_other_registered_users' => 'No other registered users.',
     'no_other_users' => 'No other users.',
+
+    // --- ERROR PAGES ---
+    'err_title_generic' => 'Oops! Something went wrong.',
+    'err_btn_home' => 'Back to Dashboard',
+    'err_btn_back' => 'Go Back',
+
+    // 400 - Bad Request
+    'err_400_title' => 'Bad Request (400)',
+    'err_400_desc' => 'The server could not understand the request due to invalid syntax.',
+
+    // 401 - Unauthorized
+    'err_401_title' => 'Unauthorized (401)',
+    'err_401_desc' => 'You must log in to access this resource.',
+
+    // 403 - Forbidden
+    'err_403_title' => 'Access Denied (403)',
+    'err_403_desc' => 'You do not have the necessary permissions to view this page.',
+
+    // 404 - Not Found
+    'err_404_title' => 'Page Not Found (404)',
+    'err_404_desc' => 'It looks like the page you were looking for does not exist or has been moved.',
+
+    // 500 - Internal Server Error
+    'err_500_title' => 'Server Error (500)',
+    'err_500_desc' => 'An unexpected server-side error occurred. Please try again later.',
+
+    // 503 - Service Unavailable
+    'err_503_title' => 'Service Unavailable (503)',
+    'err_503_desc' => 'The system is currently under maintenance or overloaded. Please try again shortly.',
 ];
