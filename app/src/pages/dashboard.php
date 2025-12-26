@@ -21,6 +21,10 @@ try {
 // 2. Recupero Macchine e Ritardi
 $database = new Database();
 $db = $database->getConnection();
+
+// Controlla e resetta i ritardi giornalieri se necessario
+Utils::checkDailyReset($db);
+
 $stmtMacchine = $db->query("SELECT * FROM macchine");
 $macchine = $stmtMacchine->fetchAll();
 

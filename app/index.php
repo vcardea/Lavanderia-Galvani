@@ -94,11 +94,6 @@ switch ($path) {
         require SRC_PATH . '/api/delay.php';
         break;
 
-    // CRON JOBS
-    case 'cron/reset':
-        require SRC_PATH . '/cron/reset.php';
-        break;
-
     default:
         http_response_code(404);
         echo htmlspecialchars("404 - Pagina non trovata (Path richiesto: $path)");
