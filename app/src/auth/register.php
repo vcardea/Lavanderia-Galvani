@@ -10,18 +10,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $database = new Database();
     $db = $database->getConnection();
 
-    $userCode = trim($_POST['residence_code'] ?? '');
+    $userCode = trim($_POST['residence_code']) ?? '';
 
     $stmt = $db->prepare("SELECT valore FROM configurazioni WHERE chiave = 'registration_key'");
     $stmt->execute();
     $correctCode = $stmt->fetchColumn();
 
-    
-    $email_input = trim($_POST['email'] ?? '');
-    $apt_input = trim($_POST['appartamento'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $password_confirm = $_POST['password_confirm'] ?? '';
-    $username_input = trim($_POST['username'] ?? '');
+    $email_input = trim($_POST['email']) ?? '';
+    $apt_input = trim($_POST['appartamento']) ?? '';
+    $password = trim($_POST['password']) ?? '';
+    $password_confirm = trim($_POST['password_confirm']) ?? '';
+    $username_input = trim($_POST['username']) ?? '';
     
     // VALIDAZIONE CON TRADUZIONI
     if (!empty($correctCode) && $userCode !== $correctCode) {

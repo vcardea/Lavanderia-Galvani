@@ -5,8 +5,8 @@ $error = '';
 $email_input = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email_input = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
+    $email_input = trim($_POST['email']) ?? '';
+    $password = trim($_POST['password']) ?? '';
 
     $database = new Database();
     $db = $database->getConnection();

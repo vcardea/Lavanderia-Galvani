@@ -41,8 +41,8 @@ CREATE TABLE
 INSERT INTO
   `configurazioni` (`chiave`, `valore`)
 VALUES
-  ('max_hours_weekly', '8'),
-  ('registration_code', 'CHIAVE');
+  ('max_hours_weekly', '5'),
+  ('registration_code', '{REDACTED}');
 
 -- --------------------------------------------------------
 --
