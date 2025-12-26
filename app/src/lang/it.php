@@ -8,6 +8,8 @@ return [
     'nav_register' => 'Registrati',
     'nav_brand' => 'Lavanderia',
     'logged_in_as' => 'Loggato come',
+    'nav_login' => 'Accedi',
+    'nav_register' => 'Registrati',
 
     // --- GIORNI DELLA SETTIMANA ---
     'day_0' => 'Dom',

@@ -119,12 +119,12 @@
 
                         <div class="flex items-center gap-3">
                             <a href="<?= BASE_URL ?>/login" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-                                Accedi
+                                <?= __('nav_login') ?>
                             </a>
 
                             <a href="<?= BASE_URL ?>/register"
                                 class="hidden md:inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-                                Registrati
+                                <?= __('nav_register') ?>
                             </a>
                         </div>
 

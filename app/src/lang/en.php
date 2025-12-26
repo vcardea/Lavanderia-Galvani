@@ -8,6 +8,8 @@ return [
     'nav_register' => 'Register',
     'nav_brand' => 'Laundry',
     'logged_in_as' => 'Logged in as',
+    'nav_login' => 'Log in',
+    'nav_register' => 'Register',
 
     // --- DAYS OF WEEK ---
     'day_0' => 'Sun',
