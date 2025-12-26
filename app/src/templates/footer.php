@@ -48,7 +48,7 @@
                         </a>
                     </li>
                     <li>
-                        <a href="mailto:galvani@er-go.it" class="hover:text-accent hover:text-white transition-colors flex items-center justify-center md:justify-start gap-2 group">
+                        <a href="mailto:vincenzo.cardea@studio.unibo.it" class="hover:text-accent hover:text-white transition-colors flex items-center justify-center md:justify-start gap-2 group">
                             <svg class="w-4 h-4 text-zinc-600 group-hover:text-accent transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>

@@ -103,7 +103,7 @@ require SRC_PATH . '/templates/header.php';
                 </li>
             </ul>
             <p class="text-xs text-gray-500 mt-4">
-                <?= __('priv_contact_text') ?> <a href="mailto:galvani@er-go.it" class="text-accent hover:underline">galvani@er-go.it</a>
+                <?= __('priv_contact_text') ?> <a href="mailto:galvani@er-go.it" class="text-accent hover:underline">galvani@er-go.it</a> / <a href="mailto:vincenzo.cardea@studio.unibo.it" class="text-accent hover:underline">vincenzo.cardea@studio.unibo.it</a>
             </p>
         </section>
 
