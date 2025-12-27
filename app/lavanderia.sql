@@ -65,11 +65,11 @@ INSERT INTO `macchine` (`idmacchina`, `nome`, `tipo`, `stato`, `ritardo`) VALUES
 --
 CREATE TABLE IF NOT EXISTS `utenti` (
   `idutente` int(11) NOT NULL AUTO_INCREMENT,
-  `email` varchar(100) NOT NULL,
+  `email` varchar(100) UNIQUE NOT NULL,
   `password_hash` varchar(255) NOT NULL,
   `nome` varchar(50) NOT NULL,
   `numero_appartamento` varchar(10) NOT NULL,
-  `username` varchar(60) NOT NULL,
+  `username` varchar(60) UNIQUE NOT NULL,
   `ruolo` enum('user','admin') DEFAULT 'user',
   `data_registrazione` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`idutente`),
@@ -91,7 +91,6 @@ CREATE TABLE IF NOT EXISTS `prenotazioni` (
   `ora_inizio` time NOT NULL,
   `ora_fine` time NOT NULL,
   `stato` enum('in_attesa','confermata') DEFAULT 'in_attesa',
-  `scadenza_hold` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`idprenotazione`),
   KEY `idutente` (`idutente`),
