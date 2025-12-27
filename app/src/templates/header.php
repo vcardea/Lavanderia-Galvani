@@ -13,13 +13,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
+        // Inietta variabili globali per JavaScript
         const BASE_URL = "<?= BASE_URL ?>";
         window.TRANSLATIONS = <?= json_encode(Lang::getAll()) ?>;
 
+        // Funzione helper JS per traduzioni (simile a __() in PHP)
         function t(key) {
             return window.TRANSLATIONS[key] || key;
         }
 
+        // Configurazione Tema Tailwind
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -38,10 +41,12 @@
         @layer utilities {
             body { @apply bg-dark text-gray-200 font-sans antialiased; }
             
-            /* Slot Base e Logiche (Invariato) */
+            /* Classi Slot (Usate in dashboard.php e app.js) */
             .slot { @apply h-14 border border-zinc-800 bg-card flex flex-col items-center justify-center text-sm cursor-pointer relative transition-all duration-200 select-none; }
             .slot:hover { @apply bg-zinc-800; }
             .slot:last-child { @apply rounded-b-lg; }
+            
+            /* Stati Slot */
             .slot.free .status-text { @apply text-green-500; }
             .slot.taken { @apply bg-red-900/20 border-red-900/50 cursor-not-allowed; }
             .slot.taken .status-text { @apply text-red-400 font-medium; }
@@ -52,14 +57,15 @@
             .slot.past { @apply opacity-40 cursor-default border-zinc-900 !important; }
             .slot.past .time-label { @apply text-zinc-600 !important; }
 
+            /* Utility */
             .no-scrollbar::-webkit-scrollbar { display: none; }
             .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            
+            /* Modale Overlay */
             .modal-overlay { @apply fixed inset-0 bg-black/80 hidden items-center justify-center z-50 opacity-0 transition-opacity duration-300; }
             .modal-overlay.open { @apply flex opacity-100; }
         }
     </style>
-
-    <!-- <link rel="stylesheet" href="/public/css/styles.css"> -->
 </head>
 
 <body class="flex flex-col min-h-screen">
@@ -97,7 +103,6 @@
                     </div>
 
                     <?php if (isset($_SESSION['user_id'])): ?>
-
                         <div class="hidden md:flex flex-col items-end leading-none mr-2">
                             <span class="text-sm font-bold text-gray-200"><?= htmlspecialchars($_SESSION['username']) ?></span>
                         </div>
@@ -116,7 +121,6 @@
                         </button>
 
                     <?php else: ?>
-
                         <div class="flex items-center gap-3">
                             <a href="<?= BASE_URL ?>/login" class="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
                                 <?= __('nav_login') ?>
@@ -127,7 +131,6 @@
                                 <?= __('nav_register') ?>
                             </a>
                         </div>
-
                     <?php endif; ?>
 
                 </div>

@@ -1,13 +1,21 @@
 <?php
 
 /**
- * Classe di utilità che contiene metodi generici per operazioni comuni.
+ * Classe di Utilità (src/utils.php)
+ *
+ * Scopo:
+ * Contiene metodi statici per operazioni comuni (autenticazione, redirect, reset ritardi).
+ * Evita la duplicazione del codice nelle varie pagine.
+ *
+ * @package    App\Core
  */
+
 class Utils
 {
 
     /**
      * Controlla se l'utente è loggato.
+     * @return bool True se la sessione contiene user_id.
      */
     static function is_logged()
     {
@@ -16,6 +24,7 @@ class Utils
 
     /**
      * Controlla se l'utente loggato è un amministratore.
+     * @return bool
      */
     static function is_admin()
     {
@@ -24,11 +33,12 @@ class Utils
 
     /**
      * Reindirizza l'utente alla dashboard se è già loggato.
+     * Utile nelle pagine di Login/Register per evitare doppi accessi.
      */
     static function is_already_logged()
     {
         if (self::is_logged()) {
-            // ERRORE ERA QUI: Rimuovi "/pages" e ".php"
+            // Nota: Rimuovi riferimenti diretti a .php o cartelle fisiche se usi il router
             header("Location: " . BASE_URL . "/dashboard");
             exit;
         }
@@ -36,6 +46,7 @@ class Utils
 
     /**
      * Reindirizza al login se l'utente non è loggato.
+     * Protegge le pagine riservate.
      */
     static function not_logged_yet()
     {
@@ -46,7 +57,9 @@ class Utils
     }
 
     /**
-     * Gestione intelligente accesso Admin
+     * Middleware per l'accesso esclusivo agli Admin.
+     * 1. Se non loggato -> Login.
+     * 2. Se loggato ma user -> Dashboard.
      */
     static function admin_only()
     {
@@ -56,7 +69,7 @@ class Utils
             exit;
         }
 
-        // 2. Se è loggato ma non è admin, va alla dashboard (invece che al login)
+        // 2. Se è loggato ma non è admin, va alla dashboard
         if (!self::is_admin()) {
             header("Location: " . BASE_URL . "/dashboard");
             exit;
@@ -64,7 +77,9 @@ class Utils
     }
 
     /**
-     * Recupera il valore precedente di un campo del modulo...
+     * Recupera il valore precedente di un campo del modulo (per ripopolare form in errore).
+     * @param string $field Nome del campo input.
+     * @return string Valore sanificato.
      */
     static function old($field)
     {
@@ -72,7 +87,9 @@ class Utils
     }
 
     /**
-     * Preserva la data selezionata nei link.
+     * Costruisce la query string per preservare la data selezionata nei link.
+     * Utile per cambiare lingua o pagina senza perdere il giorno corrente.
+     * @return string Esempio: "&date=2025-01-01" o stringa vuota.
      */
     static function preserve_date()
     {
@@ -81,14 +98,16 @@ class Utils
 
     /**
      * Esegue un reset giornaliero dei ritardi delle macchine.
-     * Usa un file di testo per tracciare l'ultima esecuzione.
-     * 
-     * @param PDO $db Connessione al database
+     *
+     * Funzionamento:
+     * Usa un file di testo (daily_reset_log.txt) come "semaforo persistente".
+     * Se la data nel file è diversa da oggi, esegue l'UPDATE sul DB e aggiorna il file.
+     * Questo evita l'uso di Cron Jobs esterni, spesso inaffidabili su hosting gratuiti.
+     * * @param PDO $db Connessione al database.
      */
     public static function checkDailyReset($db)
     {
-        // Percorso di un file di testo che useremo come "memoria"
-        // Lo salviamo nella cartella src per tenerlo nascosto
+        // Percorso del file di log (nascosto nella cartella src o root privata)
         $lockFile = BASE_PATH . '/daily_reset_log.txt';
         $oggi = date('Y-m-d');
 
@@ -103,18 +122,18 @@ class Utils
         // Se la data nel file è DIVERSA da oggi, dobbiamo resettare!
         if ($ultimaEsecuzione !== $oggi) {
             try {
-                // 1. Esegui il reset
+                // 1. Esegui il reset su DB
                 $stmt = $db->prepare("UPDATE macchine SET ritardo = 0");
                 $stmt->execute();
 
-                // 2. Aggiorna il file con la data di oggi per non rifarlo fino a domani
+                // 2. Aggiorna il file con la data di oggi
                 file_put_contents($lockFile, $oggi);
 
-                // Opzionale: Log di debug (puoi rimuoverlo se vuoi)
+                // Opzionale: Log di debug
                 // error_log("Reset giornaliero eseguito il: " . $oggi);
 
             } catch (Exception $e) {
-                // Se fallisce, pazienza, riproverà al prossimo caricamento
+                // Se fallisce, logghiamo l'errore ma non blocchiamo l'esecuzione della pagina
                 error_log("Errore reset giornaliero: " . $e->getMessage());
             }
         }

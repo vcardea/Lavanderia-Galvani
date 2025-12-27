@@ -1,4 +1,15 @@
 <?php
+
+/**
+ * File di Lingua Inglese (lang/en.php)
+ *
+ * Scopo:
+ * Contiene tutte le traduzioni e le stringhe di testo utilizzate nell'applicazione per la lingua inglese.
+ * Le chiavi (es. 'nav_dashboard') vengono usate nel codice PHP e HTML tramite la funzione __().
+ *
+ * @package    App\Lang
+ */
+
 return [
     // --- NAVIGATION ---
     'nav_dashboard' => 'Dashboard',
@@ -8,10 +19,9 @@ return [
     'nav_register' => 'Register',
     'nav_brand' => 'Laundry',
     'logged_in_as' => 'Logged in as',
-    'nav_login' => 'Log in',
-    'nav_register' => 'Register',
 
     // --- DAYS OF WEEK ---
+    // Usati nel calendario della dashboard
     'day_0' => 'Sun',
     'day_1' => 'Mon',
     'day_2' => 'Tue',
@@ -31,6 +41,8 @@ return [
     // --- ADMIN PANEL ---
     'admin_title' => 'Admin Panel',
     'admin_subtitle' => 'Admin Area',
+
+    // Sezione Impostazioni
     'admin_sect_settings' => 'General Settings',
     'lbl_max_hours' => 'Max Weekly Hours per User',
     'note_max_hours' => 'Max bookable hours per week per user.',
@@ -39,9 +51,12 @@ return [
     'err_invalid_registration_code' => 'The Residence Code is incorrect. You can find it posted in the laundry room.',
     'btn_save' => 'Save Changes',
     'note_immediate_effect' => '*This change affects all new bookings immediately.',
+
+    // Sezione Utenti
     'delete_user' => 'Delete',
     'reset_user_pwd' => 'Reset Password',
 
+    // Sezione Macchine
     'admin_sect_machines' => 'Machines Status',
     'th_name' => 'Name',
     'th_type' => 'Type',
@@ -52,19 +67,20 @@ return [
     'btn_set_maint' => 'Set Maintenance',
     'btn_set_active' => 'Reactivate',
 
+    // Tabella Utenti
     'admin_sect_users' => 'Users List',
     'th_username' => 'Username',
     'th_email' => 'Email',
     'th_apt' => 'Apartment',
 
-    // Admin Messages (Backend)
+    // Messaggi Admin (Backend)
     'msg_config_updated' => 'Weekly hours limit updated to: <strong>%d</strong>',
     'msg_invalid_num' => 'Please enter a valid number.',
     'msg_machine_updated' => 'Machine status updated to: <strong>%s</strong>',
     'msg_pass_reset' => 'Password reset. New password:',
     'msg_user_deleted' => 'User anonymized and future bookings deleted.',
 
-    // Admin Modals
+    // Modali Admin
     'modal_reset_title' => 'Reset Password',
     'modal_reset_body' => 'Are you sure you want to reset the password for user <b>%s</b>?<br>The new password will be shown on screen.',
     'modal_delete_title' => 'Delete User',
@@ -73,16 +89,21 @@ return [
     'btn_delete_confirm' => 'Delete Permanently',
 
     // --- COMMON & AUTH ---
+    // Campi Form
     'email_label' => 'Institutional Email',
     'password_label' => 'Password',
     'password_confirm_label' => 'Confirm Password',
     'apt_label' => 'Apartment',
     'username_label' => 'Username',
+
+    // Login
     'login_title' => 'Sign In',
     'btn_enter' => 'Enter',
     'link_no_account' => 'No account yet?',
     'link_create_account' => 'Create account',
     'error_creds' => 'Invalid credentials.',
+
+    // Register
     'register_title' => 'Create Account',
     'btn_register' => 'Sign Up',
     'residence_code_info' => 'The code is posted on the laundry notice board.',
@@ -130,10 +151,11 @@ return [
     'footer_coded' => 'Coded with',
     'footer_by' => 'by',
     'btn_back_dashboard' => 'Back to Dashboard',
+    'footer_status' => 'Status',
 
     'privacy_title' => 'Privacy & Data Management',
 
-    // JS MODALS
+    // JS MODALS (Frontend)
     'modal_cancel_title' => 'Cancel Booking',
     'modal_cancel_msg' => 'Do you really want to cancel the booking for',
     'modal_confirm_title' => 'Confirm Booking',
@@ -199,7 +221,7 @@ return [
     'priv_s5_title' => '5. Cookie Policy',
     'priv_s5_desc' => 'Exclusively <strong>Technical Cookies</strong> (Session ID) are used to keep access active while browsing. No tracking, advertising profiling, or invasive third-party analytics are performed.',
 
-    // Delay Reporting
+    // Delay Reporting (Segnalazione Ritardi)
     'lbl_delay' => 'Delay',
     'lbl_delay_min' => 'min',
     'modal_delay_title' => 'Report Delay',
@@ -207,7 +229,7 @@ return [
     'btn_update_delay' => 'Update Delay',
     'delay_saved' => 'Delay updated!',
 
-    // Laundry
+    // Laundry Machine Names (Config DB)
     'Lavatrice 1' => 'Washing Machine 1',
     'Lavatrice 2' => 'Washing Machine 2',
     'Asciugatrice' => 'Dryer',
@@ -218,7 +240,7 @@ return [
     'no_other_registered_users' => 'No other registered users.',
     'no_other_users' => 'No other users.',
 
-    // --- ERROR PAGES ---
+    // --- ERROR PAGES (404, 500, etc) ---
     'err_title_generic' => 'Oops! Something went wrong.',
     'err_btn_home' => 'Back to Dashboard',
     'err_btn_back' => 'Go Back',

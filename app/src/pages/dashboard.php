@@ -1,15 +1,34 @@
 <?php
+
+/**
+ * Pagina Dashboard (pages/dashboard.php)
+ *
+ * Scopo:
+ * È la pagina principale dell'applicazione.
+ * 1. Mostra il calendario settimanale.
+ * 2. Visualizza le macchine e i loro slot orari.
+ * 3. Permette agli utenti di interagire con gli slot (prenotare/cancellare) tramite modali JS.
+ *
+ * @package    App\Pages
+ */
+
 require_once SRC_PATH . '/config/database.php';
 
-// 1. Configurazione Date
+// --------------------------------------------------------------------------
+// 1. GESTIONE DATE E CALENDARIO
+// --------------------------------------------------------------------------
+
+// Data di oggi (normalizzata a mezzanotte)
 $today = new DateTime();
 $today->setTime(0, 0, 0);
 
-$dayOfWeek = $today->format('w');
-$delta = ($dayOfWeek == 0) ? 6 : $dayOfWeek - 1;
+// Calcolo Lunedì della settimana corrente
+$dayOfWeek = $today->format('w'); // 0 (Dom) - 6 (Sab)
+$delta = ($dayOfWeek == 0) ? 6 : $dayOfWeek - 1; // Se domenica, torna indietro di 6 giorni
 $monday = clone $today;
 $monday->modify("-$delta days");
 
+// Data Selezionata (dalla query string o default oggi)
 $selectedDateStr = $_GET['date'] ?? $today->format('Y-m-d');
 try {
     $selectedDate = new DateTime($selectedDateStr);
@@ -18,13 +37,16 @@ try {
     $selectedDate = $today;
 }
 
-// 2. Recupero Macchine e Ritardi
+// --------------------------------------------------------------------------
+// 2. RECUPERO DATI DAL DB
+// --------------------------------------------------------------------------
 $database = new Database();
 $db = $database->getConnection();
 
-// Controlla e resetta i ritardi giornalieri se necessario
+// Esegue il reset giornaliero dei ritardi se è il primo accesso del giorno
 Utils::checkDailyReset($db);
 
+// Recupera elenco macchine
 $stmtMacchine = $db->query("SELECT * FROM macchine");
 $macchine = $stmtMacchine->fetchAll();
 
@@ -36,19 +58,22 @@ require SRC_PATH . '/templates/header.php';
     $tempDate = clone $monday;
     $nowReal = new DateTime();
 
+    // Ciclo per i 7 giorni della settimana
     for ($i = 0; $i < 7; $i++):
         $isActive = ($tempDate->format('Y-m-d') === $selectedDate->format('Y-m-d'));
-        $isPastDay = ($tempDate < $today); // Controlla se passato, ma non salta il ciclo
+        $isPastDay = ($tempDate < $today); // Giorno passato
 
-        // Larghezza flessibile ma con minimo, così si adattano
+        // Classi base per i giorni
         $baseClasses = "flex-grow-0 w-[calc(25%-0.5rem)] sm:w-20 py-3 rounded-lg text-center border transition-all duration-200";
 
         if ($isActive) {
+            // Giorno Selezionato (Acceso)
             $colorClasses = "bg-accent text-white shadow-lg shadow-blue-900/20 font-bold border-accent scale-105 ring-2 ring-blue-500/30";
         } elseif ($isPastDay) {
-            // Stile per giorni passati: visibili ma spenti e non cliccabili
+            // Giorno Passato (Disabilitato visivamente)
             $colorClasses = "bg-zinc-900/50 text-zinc-700 border-transparent cursor-not-allowed opacity-60";
         } else {
+            // Giorno Futuro/Attuale non selezionato
             $colorClasses = "bg-card text-gray-400 border-zinc-800 hover:bg-zinc-800 hover:text-gray-200 hover:border-zinc-600";
         }
     ?>
@@ -91,33 +116,39 @@ require SRC_PATH . '/templates/header.php';
                 </span>
 
                 <?php if (!isset($_GET['date']) || $_GET['date'] === (new DateTime())->format('Y-m-d')): ?>
-                <button onclick="openDelayModal(<?= $macchina['idmacchina'] ?>, '<?= htmlspecialchars(__($macchina['nome'])) ?>', <?= $ritardo ?>)"
-                    class="machine-delay-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 active:scale-95 <?= $hasDelay ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30 animate-pulse' : 'bg-zinc-900/80 text-zinc-500 border-zinc-700 hover:text-gray-300 hover:border-zinc-500' ?>">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span class="delay-val">
-                        <?= $hasDelay ? "+{$ritardo} " . __('lbl_delay_min') : __('lbl_delay') ?>
-                    </span>
-                </button>
+                    <button onclick="openDelayModal(<?= $macchina['idmacchina'] ?>, '<?= htmlspecialchars(__($macchina['nome'])) ?>', <?= $ritardo ?>)"
+                        class="machine-delay-btn flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all hover:scale-105 active:scale-95 <?= $hasDelay ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30 animate-pulse' : 'bg-zinc-900/80 text-zinc-500 border-zinc-700 hover:text-gray-300 hover:border-zinc-500' ?>">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="delay-val">
+                            <?= $hasDelay ? "+{$ritardo} " . __('lbl_delay_min') : __('lbl_delay') ?>
+                        </span>
+                    </button>
                 <?php endif; ?>
             </div>
 
             <div class="divide-y divide-zinc-800/50">
                 <?php
+                // Orari disponibili (08:00 - 23:00 + 00:00 del giorno dopo)
                 $hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0];
 
                 foreach ($hours as $h):
                     $timeLabel = sprintf("%02d:00", $h);
                     $slotDate = clone $selectedDate;
+
+                    // Lo slot delle 00:00 appartiene logicamente alla fine della giornata, quindi +1 giorno
                     if ($h == 0) $slotDate->modify('+1 day');
                     $slotDate->setTime($h, 0, 0);
+
                     $slotFullDate = $slotDate->format('Y-m-d');
+                    // ID univoco per manipolazione DOM via JS
                     $slotId = "slot_{$macchina['idmacchina']}_{$slotFullDate}_{$h}";
 
                     $isSlotPast = ($slotDate < $nowReal);
                     $slotBase = "slot relative h-14 flex items-center justify-center transition-colors duration-200 cursor-pointer border-l-4 border-transparent";
 
+                    // Determinazione stato visivo iniziale
                     if ($isSlotPast) {
                         $slotClass = 'past opacity-40 cursor-default bg-zinc-900/30';
                         $statusText = $isManutenzione ? 'X' : __('status_free');
@@ -127,6 +158,7 @@ require SRC_PATH . '/templates/header.php';
                         $statusText = 'MANUTENZIONE';
                         $onclick = "";
                     } else {
+                        // Slot cliccabile (lo stato reale "occupato/libero" verrà aggiornato via AJAX all'avvio)
                         $slotClass = 'free hover:bg-zinc-800';
                         $statusText = __('status_free');
                         $onclick = "prenotaSlot(this)";

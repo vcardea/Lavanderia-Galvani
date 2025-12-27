@@ -1,4 +1,14 @@
 <?php
+
+/**
+ * Pagina di Login (auth/login.php)
+ *
+ * Scopo:
+ * Verifica credenziali e crea sessione utente.
+ *
+ * @package    App\Auth
+ */
+
 require_once SRC_PATH . '/config/database.php';
 
 $error = '';
@@ -11,24 +21,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $database = new Database();
     $db = $database->getConnection();
 
+    // Recupero hash password e ruolo utente dall'email
     $stmt = $db->prepare("SELECT idutente, username, password_hash, ruolo FROM utenti WHERE email = :email");
     $stmt->execute([':email' => $email_input]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    // Verifica Password Hash
     if ($user && password_verify($password, $user['password_hash'])) {
+        // Login Successo: Imposta Sessione
         $_SESSION['user_id'] = $user['idutente'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['ruolo'] = $user['ruolo'];
         header("Location: " . BASE_URL . "/dashboard");
         exit;
     } else {
-        // TRADUZIONE APPLICATA QUI
+        // Login Fallito: Messaggio generico per sicurezza
         $error = __('error_creds');
     }
 }
 
 require SRC_PATH . '/templates/header.php';
 ?>
+
 <div class="min-h-[80vh] flex items-center justify-center px-4">
     <div class="w-full max-w-md bg-card p-8 rounded-xl shadow-2xl border border-zinc-800">
         <h2 class="text-2xl font-bold text-center mb-6 text-white">

@@ -1,4 +1,15 @@
 <?php
+
+/**
+ * Pagina Privacy Policy (pages/privacy.php)
+ *
+ * Scopo:
+ * Mostra le informazioni legali e di trattamento dati in conformità con il GDPR.
+ * Tutte le stringhe sono caricate dinamicamente dai file di lingua (it.php/en.php).
+ *
+ * @package    App\Pages
+ */
+
 require_once __DIR__ . '/../config/database.php';
 require SRC_PATH . '/templates/header.php';
 ?>

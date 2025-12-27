@@ -1,10 +1,26 @@
 <?php
+
+/**
+ * Classe Gestione Lingua (src/Lang.php)
+ *
+ * Scopo:
+ * Gestisce l'internazionalizzazione (i18n) dell'applicazione.
+ * - Rileva la lingua preferita dalla sessione o URL.
+ * - Carica il file di dizionario appropriato (it.php o en.php).
+ * - Fornisce il metodo statico get() e l'helper globale __() per tradurre le stringhe.
+ *
+ * @package    App\Core
+ */
+
 class Lang
 {
     private static $translations = [];
-    private static $current = 'it';
+    private static $current = 'it'; // Default italiano
 
-    // Inizializza la lingua (legge dalla sessione o GET)
+    /**
+     * Inizializza il sistema di lingua.
+     * Deve essere chiamato all'inizio di ogni richiesta (es. in index.php).
+     */
     public static function init()
     {
         if (session_status() === PHP_SESSION_NONE) session_start();
@@ -14,7 +30,7 @@ class Lang
             $_SESSION['lang'] = $_GET['lang'];
         }
 
-        // 2. Imposta lingua corrente
+        // 2. Imposta lingua corrente dalla sessione
         self::$current = $_SESSION['lang'] ?? 'it';
 
         // 3. Carica il file dizionario
@@ -27,26 +43,36 @@ class Lang
         }
     }
 
-    // Funzione per tradurre lato PHP
+    /**
+     * Recupera una stringa tradotta.
+     * @param string $key Chiave della traduzione.
+     * @return string Testo tradotto o la chiave stessa se non trovata.
+     */
     public static function get($key)
     {
-        return self::$translations[$key] ?? $key; // Restituisce la chiave se manca la traduzione
+        return self::$translations[$key] ?? $key;
     }
 
-    // Restituisce la lingua corrente (es. 'it')
+    /**
+     * Restituisce il codice della lingua corrente (es. 'it', 'en').
+     */
     public static function current()
     {
         return self::$current;
     }
 
-    // Restituisce tutto l'array (per passarlo a JS)
+    /**
+     * Restituisce l'intero array delle traduzioni.
+     * Utile per passare le stringhe al frontend JavaScript.
+     */
     public static function getAll()
     {
         return self::$translations;
     }
 }
 
-// Funzione helper globale (per scrivere meno codice nelle viste)
+// Funzione helper globale per abbreviare Lang::get()
+// Esempio d'uso: <?= __('welcome_msg') >
 function __($key)
 {
     return Lang::get($key);

@@ -1,5 +1,17 @@
 <?php
-// src/pages/admin.php
+
+/**
+ * Pannello di Amministrazione (pages/admin.php)
+ *
+ * Scopo:
+ * Permette agli amministratori di:
+ * 1. Configurare parametri globali (ore massime, codice segreto).
+ * 2. Gestire lo stato delle macchine (Attiva/Manutenzione).
+ * 3. Gestire gli utenti (Reset password, Eliminazione/Anonimizzazione).
+ *
+ * @package    App\Pages
+ */
+
 require_once SRC_PATH . '/config/database.php';
 
 $database = new Database();
@@ -7,15 +19,17 @@ $db = $database->getConnection();
 $msg = '';
 $msgType = 'success';
 
-// --- GESTIONE AZIONI POST ---
+// --------------------------------------------------------------------------
+// 1. GESTIONE AZIONI POST (Submit Form)
+// --------------------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // 1. Aggiornamento Configurazioni (Ore + Codice)
+    // A. Aggiornamento Configurazioni (Ore + Codice)
     if (isset($_POST['action']) && $_POST['action'] === 'update_config') {
 
         $errors = [];
 
-        // Gestione Ore Settimanali
+        // Validazione Ore Settimanali
         $newLimit = (int)$_POST['max_hours'];
         if ($newLimit > 0) {
             $stmt = $db->prepare("UPDATE configurazioni SET valore = ? WHERE chiave = 'max_hours_weekly'");
@@ -24,10 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = __('msg_invalid_num');
         }
 
-        // Gestione Codice Registrazione (Upsert: Inserisci o Aggiorna)
+        // Validazione Codice Registrazione (Upsert)
         $newCode = trim($_POST['registration_code'] ?? '');
         if (!empty($newCode)) {
-            // Usa INSERT ... ON DUPLICATE KEY UPDATE per gestire sia il primo inserimento che gli aggiornamenti
+            // Usa ON DUPLICATE KEY UPDATE per gestire inserimenti o aggiornamenti
             $stmt = $db->prepare("INSERT INTO configurazioni (chiave, valore) VALUES ('registration_code', ?) ON DUPLICATE KEY UPDATE valore = ?");
             $stmt->execute([$newCode, $newCode]);
         } else {
@@ -40,45 +54,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $msg = implode("<br>", $errors);
             $msgType = 'error';
         }
+
+        // B. Toggle Stato Macchina (Attiva <-> Manutenzione)
     } elseif (isset($_POST['action']) && $_POST['action'] === 'toggle_machine') {
-        // ... (Codice invariato)
         $idMacchina = $_POST['id_macchina'];
         $currentStatus = $_POST['current_status'];
         $newStatus = ($currentStatus === 'attiva') ? 'manutenzione' : 'attiva';
+
         $stmt = $db->prepare("UPDATE macchine SET stato = ? WHERE idmacchina = ?");
         $stmt->execute([$newStatus, $idMacchina]);
+
         $statusLabel = ($newStatus === 'attiva') ? __('st_active') : __('st_maint');
         $msg = sprintf(__('msg_machine_updated'), strtoupper($statusLabel));
+
+        // C. Reset Password Utente (Genera password casuale)
     } elseif (isset($_POST['action']) && $_POST['action'] === 'reset_password') {
-        // ... (Codice invariato)
         $userId = $_POST['user_id'];
-        $newPass = bin2hex(random_bytes(4));
+        $newPass = bin2hex(random_bytes(4)); // Genera stringa hex di 8 caratteri
         $newHash = password_hash($newPass, PASSWORD_BCRYPT);
+
         $stmt = $db->prepare("UPDATE utenti SET password_hash = ? WHERE idutente = ?");
         $stmt->execute([$newHash, $userId]);
+
+        // Mostra la nuova password all'admin una sola volta
         $msg = __('msg_pass_reset') . " <strong class='font-mono bg-black px-2 py-1 rounded text-accent'>" . htmlspecialchars($newPass) . "</strong>";
+
+        // D. Eliminazione Utente (Anonimizzazione GDPR)
     } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_user') {
-        // ... (Codice invariato)
         $userId = $_POST['user_id'];
+
+        // Dati fittizi per anonimizzare
         $anonimo = "Utente Cancellato";
         $dummyEmail = "deleted_$userId@anon.imo";
         $dummyPass = "LOCKED";
+
+        // Aggiorna utente rendendolo irriconoscibile
         $stmt = $db->prepare("UPDATE utenti SET nome = ?, email = ?, username = ?, password_hash = ?, numero_appartamento = '' WHERE idutente = ?");
         $stmt->execute([$anonimo, $dummyEmail, $anonimo, $dummyPass, $userId]);
+
+        // Cancella solo le prenotazioni future (mantiene lo storico passato per statistiche)
         $stmtDelRes = $db->prepare("DELETE FROM prenotazioni WHERE idutente = ? AND data_prenotazione >= CURRENT_DATE");
         $stmtDelRes->execute([$userId]);
+
         $msg = __('msg_user_deleted');
     }
 }
 
-// --- RECUPERO DATI ---
+// --------------------------------------------------------------------------
+// 2. RECUPERO DATI PER LA VISTA
+// --------------------------------------------------------------------------
 try {
     // Config: Recuperiamo TUTTE le configurazioni come array chiave-valore
-    // Risultato atteso: ['max_hours_weekly' => '3', 'registration_code' => 'GALVANI2025']
     $stmtConf = $db->query("SELECT chiave, valore FROM configurazioni");
     $config = $stmtConf->fetchAll(PDO::FETCH_KEY_PAIR);
 
-    // Valori di default se mancano nel DB
     $currentLimit = $config['max_hours_weekly'] ?? 3;
     $currentCode = $config['registration_code'] ?? 'GALVANI2025';
 
@@ -86,7 +115,7 @@ try {
     $stmtMacchine = $db->query("SELECT * FROM macchine");
     $macchine = $stmtMacchine->fetchAll();
 
-    // Utenti
+    // Utenti (Escludi me stesso)
     $stmtList = $db->prepare("SELECT * FROM utenti WHERE idutente != ? ORDER BY data_registrazione DESC");
     $stmtList->execute([$_SESSION['user_id']]);
     $utenti = $stmtList->fetchAll();
@@ -151,6 +180,7 @@ require SRC_PATH . '/templates/header.php';
         <div class="p-4 bg-zinc-800/50 border-b border-zinc-700">
             <h3 class="font-bold text-gray-200 flex items-center gap-2">🧺 <?= __('admin_sect_machines') ?></h3>
         </div>
+
         <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left text-sm text-gray-400">
                 <thead class="bg-zinc-800/30 uppercase text-xs">
@@ -192,6 +222,7 @@ require SRC_PATH . '/templates/header.php';
                 </tbody>
             </table>
         </div>
+
         <div class="md:hidden p-4 space-y-4">
             <?php foreach ($macchine as $m): ?>
                 <div class="bg-zinc-900/50 border border-zinc-700 rounded-lg p-4 flex flex-col gap-3">
@@ -264,6 +295,7 @@ require SRC_PATH . '/templates/header.php';
                 </tbody>
             </table>
         </div>
+
         <div class="md:hidden p-4 space-y-4">
             <?php if (empty($utenti)): ?>
                 <div class="text-center text-gray-500 italic p-4"><?= __('no_other_users') ?></div>
@@ -307,7 +339,7 @@ require SRC_PATH . '/templates/header.php';
 </div>
 
 <script>
-    // --- Testi per il modale (traduzioni) ---
+    // --- Testi per il modale (traduzioni) iniettati da PHP ---
     const txt_reset_title = "<?= __('modal_reset_title') ?>";
     const txt_reset_body_tpl = "<?= __('modal_reset_body') ?>";
     const txt_btn_reset = "<?= __('btn_reset_confirm') ?>";
@@ -316,7 +348,9 @@ require SRC_PATH . '/templates/header.php';
     const txt_btn_del = "<?= __('btn_delete_confirm') ?>";
     const txt_cancel = "<?= __('btn_cancel') ?>";
 
-    // --- Funzione per Modale di Conferma ---
+    /**
+     * Apre il modale di conferma per azioni amministrative distruttive.
+     */
     function confirmAdminAction(formId, actionType, username) {
         let title, body, btnClass, btnText;
         if (actionType === 'reset') {
@@ -353,12 +387,10 @@ require SRC_PATH . '/templates/header.php';
         modal.classList.add('open');
     }
 
+    // Chiude il modale cliccando fuori
     document.getElementById('bookingModal').addEventListener('click', (e) => {
         if (e.target.classList.contains('modal-overlay')) document.getElementById('bookingModal').classList.remove('open');
     });
-
-    // NOTA: Ho rimosso l'event listener sul form settingsForm perché ora
-    // l'invio è gestito direttamente dal PHP in cima alla pagina tramite il submit standard.
 </script>
 
 <?php require SRC_PATH . '/templates/footer.php'; ?>

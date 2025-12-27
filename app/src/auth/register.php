@@ -1,17 +1,37 @@
 <?php
+
+/**
+ * Pagina di Registrazione (auth/register.php)
+ *
+ * Scopo:
+ * Permette ai nuovi utenti di creare un account.
+ *
+ * Funzionalità Chiave:
+ * - Validazione input (email istituzionale, codice residenza, password match).
+ * - Generazione automatica username.
+ * - Hashing sicuro della password.
+ * - Login automatico post-registrazione.
+ *
+ * @package    App\Auth
+ */
+
 require_once SRC_PATH . '/config/database.php';
 
+// Inizializzazione variabili per mantenere lo stato del form in caso di errore
 $error = '';
 $email_input = '';
 $apt_input = '';
 $generated_username = '';
 
+// Gestione sottomissione form (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $database = new Database();
     $db = $database->getConnection();
 
+    // Recupero dati dal form
     $userCode = trim($_POST['residence_code']) ?? '';
 
+    // Recupero codice segreto di registrazione dal DB per validazione
     $stmt = $db->prepare("SELECT valore FROM configurazioni WHERE chiave = 'registration_key'");
     $stmt->execute();
     $correctCode = $stmt->fetchColumn();
@@ -21,42 +41,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = trim($_POST['password']) ?? '';
     $password_confirm = trim($_POST['password_confirm']) ?? '';
     $username_input = trim($_POST['username']) ?? '';
-    
-    // VALIDAZIONE CON TRADUZIONI
+
+    // --------------------------------------------------------------------------
+    // VALIDAZIONE INPUT (SERVER-SIDE)
+    // --------------------------------------------------------------------------
+
+    // 1. Controllo Codice Residenza (Anti-Spam / Sicurezza fisica)
     if (!empty($correctCode) && $userCode !== $correctCode) {
         $error = __('err_invalid_registration_code');
+        // 2. Controllo Range Appartamento
     } elseif ($apt_input < 1 || $apt_input > 23) {
         $error = __('err_apt_range');
+        // 3. Controllo Dominio Email (Solo istituzionale)
     } elseif (!preg_match('/^[a-zA-Z0-9.]+@(studio\.unibo\.it|unibo\.it)$/', $email_input)) {
         $error = __('err_email_domain');
+        // 4. Controllo Username vuoto
     } elseif (empty($username_input)) {
         $error = __('err_username_empty');
+        // 5. Controllo Formato Username (Regex)
     } elseif (!preg_match('/^[a-zA-Z]+[0-9]{1,2}-[0-9]{2}$/', $username_input)) {
         $error = __('err_username_format');
+        // 6. Controllo Lunghezza Password
     } elseif (strlen($password) < 8) {
         $error = __('err_pass_short');
+        // 7. Controllo Corrispondenza Password
     } elseif ($password !== $password_confirm) {
         $error = __('err_pass_match');
     } else {
+        // ----------------------------------------------------------------------
+        // VERIFICA UNICITÀ UTENTE
+        // ----------------------------------------------------------------------
         $stmt = $db->prepare("SELECT idutente FROM utenti WHERE email = ? OR username = ?");
         $stmt->execute([$email_input, $username_input]);
 
         if ($stmt->rowCount() > 0) {
             $error = __('err_user_taken');
         } else {
+            // Estrazione Nome Reale dall'email (es. mario.rossi@... -> Mario)
             $parts = explode('@', $email_input);
             $localPart = $parts[0];
             $nameParts = explode('.', $localPart);
             $nomeReale = ucfirst($nameParts[0]);
 
+            // Hashing password sicuro
             $hash = password_hash($password, PASSWORD_BCRYPT);
+
+            // Inserimento nuovo utente
             $sql = "INSERT INTO utenti (email, password_hash, nome, numero_appartamento, username) VALUES (?, ?, ?, ?, ?)";
             $insert = $db->prepare($sql);
 
             if ($insert->execute([$email_input, $hash, $nomeReale, $apt_input, $username_input])) {
+                // Login Automatico dopo registrazione
                 $_SESSION['user_id'] = $db->lastInsertId();
                 $_SESSION['username'] = $username_input;
-                $_SESSION['ruolo'] = 'user';
+                $_SESSION['ruolo'] = 'user'; // Ruolo default
+
                 header("Location: " . BASE_URL . "/dashboard");
                 exit;
             } else {
@@ -66,18 +105,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Inclusione Header HTML
 require SRC_PATH . '/templates/header.php';
 ?>
+
 <div class="min-h-[80vh] flex items-center justify-center px-4 py-8">
     <div class="w-full max-w-md bg-card p-8 rounded-xl shadow-2xl border border-zinc-800">
         <h2 class="text-2xl font-bold text-center mb-6 text-white">
             <?= __('register_title') ?>
         </h2>
+
         <?php if (!empty($error)): ?>
             <div class="bg-red-900/30 border border-red-800 text-red-300 p-3 rounded mb-4 text-sm text-center">
                 <?= htmlspecialchars($error) ?>
             </div>
         <?php endif; ?>
+
         <form method="POST" action="<?= BASE_URL ?>/register" class="space-y-4">
             <div class="grid grid-cols-12 gap-3">
                 <div class="col-span-8">
@@ -93,6 +136,7 @@ require SRC_PATH . '/templates/header.php';
                         class="w-full bg-zinc-800 border border-zinc-700 rounded p-3 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all placeholder-zinc-600 text-sm text-center">
                 </div>
             </div>
+
             <div class="relative group">
                 <label class="block text-xs font-medium text-accent mb-1 uppercase flex justify-between">
                     <?= __('lbl_username_gen') ?>
@@ -109,7 +153,9 @@ require SRC_PATH . '/templates/header.php';
                     </button>
                 </div>
             </div>
+
             <hr class="border-zinc-800 my-4">
+
             <div>
                 <label class="block text-xs font-medium text-gray-400 mb-1 uppercase"><?= __('password_label') ?></label>
                 <div class="relative">
@@ -144,6 +190,7 @@ require SRC_PATH . '/templates/header.php';
                 <p id="matchError" class="text-xs text-red-400 mt-1 hidden">⚠ Le password non coincidono</p>
                 <p id="matchSuccess" class="text-xs text-green-500 mt-1 hidden">✓ Le password coincidono</p>
             </div>
+
             <div class="mt-4">
                 <label class="block text-xs font-medium text-gray-400 mb-1 uppercase" for="residence_code">
                     Codice Residenza
@@ -163,18 +210,25 @@ require SRC_PATH . '/templates/header.php';
                 </div>
                 <p class="text-xs text-gray-500 mt-1"><?= __('residence_code_info') ?></p>
             </div>
+
             <button type="submit" id="submitBtn" class="w-full bg-accent hover:bg-blue-600 text-white font-bold py-3 rounded transition-colors shadow-lg shadow-blue-900/20">
                 <?= __('btn_register') ?>
             </button>
         </form>
+
         <p class="text-center text-sm text-gray-500 mt-6">
             <?= __('link_have_account') ?> <a href="<?= BASE_URL ?>/login" class="text-accent hover:underline"><?= __('link_login_here') ?></a>
         </p>
     </div>
 </div>
+
 <script>
     let currentRandom = Math.floor(Math.random() * 90) + 10;
 
+    /**
+     * Genera username in tempo reale combinando parte dell'email e numero appartamento.
+     * Formato: nomeApt-Rand (es. mario12-45)
+     */
     function generateUsername() {
         const email = document.getElementById('emailInput').value;
         const apt = document.getElementById('aptInput').value;
@@ -187,11 +241,17 @@ require SRC_PATH . '/templates/header.php';
         output.value = `${namePart}${apt}-${currentRandom}`;
     }
 
+    /**
+     * Rigenera la parte casuale dello username.
+     */
     function regenerateRandom() {
         currentRandom = Math.floor(Math.random() * 90) + 10;
         generateUsername();
     }
 
+    /**
+     * Mostra/Nasconde la password.
+     */
     function togglePass(inputId, iconClosedId, iconOpenId) {
         /* ... codice uguale ... */
         const input = document.getElementById(inputId);
@@ -208,8 +268,10 @@ require SRC_PATH . '/templates/header.php';
         }
     }
 
+    /**
+     * Controlla che i due campi password coincidano.
+     */
     function checkMatch() {
-        /* ... codice uguale ... */
         const p1 = document.getElementById('pass1').value;
         const p2 = document.getElementById('pass2').value;
         const errorMsg = document.getElementById('matchError');
@@ -237,6 +299,8 @@ require SRC_PATH . '/templates/header.php';
             btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
     }
+
+    // Inizializza username al caricamento se i campi sono precompilati
     document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('emailInput').value) {
             generateUsername();

@@ -1,8 +1,18 @@
 <?php
-// 1. Logica PHP (riceve i dati dall'index.php)
+
+/**
+ * Pagina di Errore (pages/error.php)
+ *
+ * Scopo:
+ * Visualizza una pagina di errore generica e stilizzata per codici HTTP come 404, 500, etc.
+ *
+ * @package    App\Pages
+ */
+
+// 1. Recupera il codice errore dalla query string (default: 404)
 $code = isset($_GET['code']) ? (int)$_GET['code'] : 404;
 
-// Mappatura Messaggi
+// Mappatura Codici -> Messaggi Tradotti
 $errors = [
     400 => ['title' => 'err_400_title', 'desc' => 'err_400_desc'],
     401 => ['title' => 'err_401_title', 'desc' => 'err_401_desc'],
@@ -12,13 +22,14 @@ $errors = [
     503 => ['title' => 'err_503_title', 'desc' => 'err_503_desc'],
 ];
 
-// Fallback sicurezza
+// Fallback se il codice non è mappato
 if (!array_key_exists($code, $errors)) {
     $code = 404;
 }
 
 $errorInfo = $errors[$code];
 
+// Imposta l'header HTTP reale
 http_response_code($code);
 
 require SRC_PATH . '/templates/header.php';

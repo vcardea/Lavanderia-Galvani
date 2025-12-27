@@ -1,4 +1,14 @@
 <?php
+
+/**
+ * File di Lingua Italiano (lang/it.php)
+ *
+ * Scopo:
+ * Contiene tutte le traduzioni e le stringhe di testo utilizzate nell'applicazione.
+ *
+ * @package    App\Lang
+ */
+
 return [
     // --- NAVIGAZIONE ---
     'nav_dashboard' => 'Bacheca',
@@ -8,8 +18,6 @@ return [
     'nav_register' => 'Registrati',
     'nav_brand' => 'Lavanderia',
     'logged_in_as' => 'Loggato come',
-    'nav_login' => 'Accedi',
-    'nav_register' => 'Registrati',
 
     // --- GIORNI DELLA SETTIMANA ---
     'day_0' => 'Dom',
@@ -31,6 +39,8 @@ return [
     // --- ADMIN PANEL ---
     'admin_title' => 'Pannello Amministrazione',
     'admin_subtitle' => 'Admin Area',
+
+    // Impostazioni
     'admin_sect_settings' => 'Impostazioni Generali',
     'lbl_max_hours' => 'Max Ore Settimanali per Utente',
     'note_max_hours' => 'Ore max prenotabili a settimana per utente.',
@@ -39,9 +49,12 @@ return [
     'err_invalid_registration_code' => 'Il Codice Residenza è errato. Lo trovi appeso in lavanderia.',
     'btn_save' => 'Salva Modifiche',
     'note_immediate_effect' => '*Questa modifica ha effetto immediato su tutte le nuove prenotazioni.',
+
+    // Azioni Utente
     'delete_user' => 'Elimina',
     'reset_user_pwd' => 'Resetta Password',
 
+    // Macchine
     'admin_sect_machines' => 'Stato Macchine',
     'th_name' => 'Nome',
     'th_type' => 'Tipo',
@@ -52,12 +65,13 @@ return [
     'btn_set_maint' => 'Metti in Manutenzione',
     'btn_set_active' => 'Riattiva',
 
+    // Lista Utenti
     'admin_sect_users' => 'Lista Utenti',
     'th_username' => 'Username',
     'th_email' => 'Email',
     'th_apt' => 'Appartamento',
 
-    // Messaggi Admin (Backend)
+    // Messaggi Admin
     'msg_config_updated' => 'Limite ore settimanali aggiornato a: <strong>%d</strong>',
     'msg_invalid_num' => 'Inserisci un numero valido.',
     'msg_machine_updated' => 'Stato macchina aggiornato a: <strong>%s</strong>',
@@ -130,8 +144,9 @@ return [
     'footer_coded' => 'Coded with',
     'footer_by' => 'by',
     'btn_back_dashboard' => 'Torna alla Dashboard',
+    'footer_status' => 'Stato',
 
-    // Privacy (Titoli generici se servono dynamicamente)
+    // Privacy
     'privacy_title' => 'Privacy & Gestione Dati',
 
     // JS MODALS
